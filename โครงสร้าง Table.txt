@@ -1,0 +1,102 @@
+-- ตารางผู้ใช้
+CREATE TABLE users (
+  id INT PRIMARY KEY AUTO_INCREMENT,
+  name VARCHAR(100),
+  email VARCHAR(100) UNIQUE,
+  password VARCHAR(255),
+  phone VARCHAR(20),
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- ตารางร้านรถ
+CREATE TABLE vendors (
+  id INT PRIMARY KEY AUTO_INCREMENT,
+  name VARCHAR(100),
+  contact VARCHAR(100),
+  address TEXT,
+  user_id INT,
+  FOREIGN KEY (user_id) REFERENCES users(id)
+);
+
+-- ตารางรถ
+CREATE TABLE cars (
+  id INT PRIMARY KEY AUTO_INCREMENT,
+  vendor_id INT,
+  name VARCHAR(100),
+  license_plate VARCHAR(20) UNIQUE,
+  is_available BOOLEAN DEFAULT TRUE,
+  location_lat DECIMAL(10,7),
+  location_lng DECIMAL(10,7),
+  FOREIGN KEY (vendor_id) REFERENCES vendors(id)
+);
+
+-- ตารางคนขับ
+CREATE TABLE drivers (
+  id INT PRIMARY KEY AUTO_INCREMENT,
+  user_id INT,
+  service_radius_km INT DEFAULT 10,
+  base_lat DECIMAL(10,7),
+  base_lng DECIMAL(10,7),
+  is_available BOOLEAN DEFAULT TRUE,
+  FOREIGN KEY (user_id) REFERENCES users(id)
+);
+
+-- ตารางจองรถ
+CREATE TABLE bookings (
+  id INT PRIMARY KEY AUTO_INCREMENT,
+  user_id INT,
+  car_id INT,
+  driver_required BOOLEAN DEFAULT FALSE,
+  booking_date DATE,
+  start_time DATETIME,
+  end_time DATETIME,
+  status ENUM('pending','confirmed','rejected','no_driver_found','cancelled') DEFAULT 'pending',
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (user_id) REFERENCES users(id),
+  FOREIGN KEY (car_id) REFERENCES cars(id)
+);
+
+-- ตารางจับคู่คนขับกับการจอง
+CREATE TABLE driver_assignments (
+  id INT PRIMARY KEY AUTO_INCREMENT,
+  booking_id INT,
+  driver_id INT,
+  is_accepted BOOLEAN DEFAULT NULL,
+  responded_at DATETIME NULL,
+  FOREIGN KEY (booking_id) REFERENCES bookings(id),
+  FOREIGN KEY (driver_id) REFERENCES drivers(id)
+);
+CREATE TABLE receipts (
+  id INT PRIMARY KEY AUTO_INCREMENT,
+  booking_id INT,
+  total_amount DECIMAL(10, 2),
+  payment_method ENUM('credit_card', 'cash', 'bank_transfer'),
+  is_paid BOOLEAN DEFAULT FALSE,
+  issued_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (booking_id) REFERENCES bookings(id)
+);
+CREATE TABLE notifications (
+  id INT PRIMARY KEY AUTO_INCREMENT,
+  user_id INT,
+  title VARCHAR(255),
+  message TEXT,
+  is_read BOOLEAN DEFAULT FALSE,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (user_id) REFERENCES users(id)
+);
+
+
+
+ALTER TABLE receipts
+ADD COLUMN payment_status ENUM('pending', 'paid', 'failed') DEFAULT 'pending',
+ADD COLUMN payment_channel ENUM('promptpay', 'credit_card', 'qr_code', 'bank_transfer'),
+ADD COLUMN transaction_id VARCHAR(100) DEFAULT NULL,
+ADD COLUMN paid_at DATETIME DEFAULT NULL;
+
+SELECT * FROM bookings WHERE user_id = ? ORDER BY created_at DESC;
+SELECT b.* FROM bookings b
+JOIN cars c ON b.car_id = c.id
+WHERE c.vendor_id = ? ORDER BY b.created_at DESC;
+SELECT b.* FROM bookings b
+JOIN driver_assignments da ON b.id = da.booking_id
+WHERE da.driver_id = ? ORDER BY b.created_at DESC;
