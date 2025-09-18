@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<robot generator="Robot 7.3.2 (Python 3.13.5 on win32)" generated="2025-07-22T17:39:15.460040" rpa="false" schemaversion="5">
+<suite id="s1" name="Test Api" source="D:\Project-Appcar-master\backend\test_api.robot">
+<test id="s1-t1" name="Create Booking API Should Return Status 200" line="11">
+<kw name="Create Dictionary" owner="BuiltIn">
+<msg time="2025-07-22T17:39:15.773922" level="INFO">${headers} = {'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MywiZW1haWwiOiJuYW5hQGV4YW1wbGUuY29tIiwibmFtZSI6Ik5hbmEiLCJyb2xlIjoiY3VzdG9tZXIiLCJpYXQiOjE3NTMxNzkyNjgsImV4cCI6MTc1Mzc4NDA2OH0.A...</msg>
+<var>${headers}</var>
+<arg>Authorization=Bearer ${AUTH_TOKEN}</arg>
+<arg>Content-Type=application/json</arg>
+<doc>Creates and returns a dictionary based on the given ``items``.</doc>
+<status status="PASS" start="2025-07-22T17:39:15.773593" elapsed="0.000362"/>
+</kw>
+<kw name="POST" owner="RequestsLibrary">
+<msg time="2025-07-22T17:39:15.779733" level="INFO">POST Request : url=http://localhost:3000/api/bookings 
+ path_url=/api/bookings 
+ headers={'User-Agent': 'python-requests/2.32.4', 'Accept-Encoding': 'gzip, deflate', 'Accept': '*/*', 'Connection': 'keep-alive', 'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MywiZW1haWwiOiJuYW5hQGV4YW1wbGUuY29tIiwibmFtZSI6Ik5hbmEiLCJyb2xlIjoiY3VzdG9tZXIiLCJpYXQiOjE3NTMxNzkyNjgsImV4cCI6MTc1Mzc4NDA2OH0.Any6vdDQSsVQOp6TzthwiahGtTukShpKbduXKlGILNs', 'Content-Type': 'application/json', 'Content-Length': '158'} 
+ body=b'"{\\"car_id\\": 2, \\"booking_date\\": \\"2025-07-07\\", \\"start_time\\": \\"2025-07-23T09:00:00\\", \\"end_time\\": \\"2025-07-23T17:00:00\\", \\"driver_required\\": true}"' 
+ </msg>
+<msg time="2025-07-22T17:39:15.779860" level="INFO">POST Response : url=http://localhost:3000/api/bookings 
+ status=400, reason=Bad Request 
+ headers={'X-Powered-By': 'Express', 'Access-Control-Allow-Origin': '*', 'Content-Security-Policy': "default-src 'none'", 'X-Content-Type-Options': 'nosniff', 'Content-Type': 'text/html; charset=utf-8', 'Content-Length': '1146', 'Date': 'Tue, 22 Jul 2025 10:39:15 GMT', 'Connection': 'keep-alive', 'Keep-Alive': 'timeout=5'} 
+ body=&lt;!DOCTYPE html&gt;
+&lt;html lang="en"&gt;
+&lt;head&gt;
+&lt;meta charset="utf-8"&gt;
+&lt;title&gt;Error&lt;/title&gt;
+&lt;/head&gt;
+&lt;body&gt;
+&lt;pre&gt;SyntaxError: Unexpected token &amp;#39;&amp;quot;&amp;#39;, &amp;quot;&amp;quot;{\&amp;quot;car_id&amp;quot;... is not valid JSON&lt;br&gt; &amp;nbsp; &amp;nbsp;at JSON.parse (&amp;lt;anonymous&amp;gt;)&lt;br&gt; &amp;nbsp; &amp;nbsp;at createStrictSyntaxError (D:\Project-Appcar-master\backend\node_modules\body-parser\lib\types\json.js:156:10)&lt;br&gt; &amp;nbsp; &amp;nbsp;at parse (D:\Project-Appcar-master\backend\node_modules\body-parser\lib\types\json.js:71:15)&lt;br&gt; &amp;nbsp; &amp;nbsp;at D:\Project-Appcar-master\backend\node_modules\body-parser\lib\read.js:123:18&lt;br&gt; &amp;nbsp; &amp;nbsp;at AsyncResource.runInAsyncScope (node:async_hooks:206:9)&lt;br&gt; &amp;nbsp; &amp;nbsp;at invokeCallback (D:\Project-Appcar-master\backend\node_modules\raw-body\index.js:238:16)&lt;br&gt; &amp;nbsp; &amp;nbsp;at done (D:\Project-Appcar-master\backend\node_modules\raw-body\index.js:227:7)&lt;br&gt; &amp;nbsp; &amp;nbsp;at IncomingMessage.onEnd (D:\Project-Appcar-master\backend\node_modules\raw-body\index.js:287:7)&lt;br&gt; &amp;nbsp; &amp;nbsp;at IncomingMessage.emit (node:events:519:28)&lt;br&gt; &amp;nbsp; &amp;nbsp;at endReadableNT (node:internal/streams/readable:1696:12)&lt;/pre&gt;
+&lt;/body&gt;
+&lt;/html&gt;
+ 
+ </msg>
+<msg time="2025-07-22T17:39:15.779992" level="FAIL">HTTPError: 400 Client Error: Bad Request for url: http://localhost:3000/api/bookings</msg>
+<var>${response}</var>
+<arg>${API_URL}</arg>
+<arg>headers=${headers}</arg>
+<arg>json=${BOOKING_DATA}</arg>
+<doc>Sends a POST request.</doc>
+<status status="FAIL" start="2025-07-22T17:39:15.774105" elapsed="0.007650">HTTPError: 400 Client Error: Bad Request for url: http://localhost:3000/api/bookings</status>
+</kw>
+<kw name="Log" owner="BuiltIn">
+<arg>${response.content}</arg>
+<arg>INFO</arg>
+<doc>Logs the given message with the given level.</doc>
+<status status="NOT RUN" start="2025-07-22T17:39:15.782002" elapsed="0.000281"/>
+</kw>
+<kw name="Get Response Status Code">
+<var>${status_code}</var>
+<arg>${response}</arg>
+<status status="NOT RUN" start="2025-07-22T17:39:15.782546" elapsed="0.000027"/>
+</kw>
+<kw name="Should Be Equal As Numbers" owner="BuiltIn">
+<arg>${status_code}</arg>
+<arg>${EXPECTED_STATUS_CODE}</arg>
+<doc>Fails if objects are unequal after converting them to real numbers.</doc>
+<status status="NOT RUN" start="2025-07-22T17:39:15.782700" elapsed="0.000016"/>
+</kw>
+<status status="FAIL" start="2025-07-22T17:39:15.772931" elapsed="0.009957">HTTPError: 400 Client Error: Bad Request for url: http://localhost:3000/api/bookings</status>
+</test>
+<status status="FAIL" start="2025-07-22T17:39:15.461523" elapsed="0.321820"/>
+</suite>
+<statistics>
+<total>
+<stat pass="0" fail="1" skip="0">All Tests</stat>
+</total>
+<tag>
+</tag>
+<suite>
+<stat name="Test Api" id="s1" pass="0" fail="1" skip="0">Test Api</stat>
+</suite>
+</statistics>
+<errors>
+</errors>
+</robot>
