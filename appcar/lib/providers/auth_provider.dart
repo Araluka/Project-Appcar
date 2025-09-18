@@ -25,7 +25,6 @@ class AuthProvider extends ChangeNotifier {
     }
   }
 
-  /// สมัครแล้ว “ให้ผู้ใช้กลับไป Login” (เพราะ backend ไม่ได้คืน token)
   Future<int> registerCustomer({
     required String name,
     required String email,
@@ -48,8 +47,8 @@ class AuthProvider extends ChangeNotifier {
     }
   }
 
-  void logout() {
-    api.logout();
+  Future<void> logout() async {
+    await api.logout();
     _user = null;
     notifyListeners();
   }

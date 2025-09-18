@@ -8,21 +8,27 @@ import 'screens/home_screen.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  runApp(const MyApp(apiBaseUrl: "https://abcd.ngrok.io"));
+
+  // ตั้งค่า base URL ของ backend ที่นี่ (แนะนำใช้ HTTPS จาก ngrok)
+  const baseUrl = "http://192.168.2.91:3000";
+
+  final api = ApiService(baseUrl: baseUrl);
+
+  runApp(MyApp(api: api));
 }
 
 class MyApp extends StatelessWidget {
-  final String apiBaseUrl;
-  const MyApp({super.key, required this.apiBaseUrl});
+  final ApiService api;
+  const MyApp({super.key, required this.api});
 
   @override
   Widget build(BuildContext context) {
     return MultiProvider(
       providers: [
-        ChangeNotifierProvider(create: (_) => AuthProvider(ApiService())),
+        ChangeNotifierProvider(create: (_) => AuthProvider(api)),
       ],
       child: MaterialApp(
-        title: 'AppCar Araluka',
+        title: 'AppCar',
         debugShowCheckedModeBanner: false,
         home: const LoginScreen(),
         routes: {
