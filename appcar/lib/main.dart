@@ -1,11 +1,14 @@
+// lib/main.dart
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'services/api_service.dart';
+import 'providers/auth_provider.dart';
+import 'screens/login_screen.dart';
+import 'screens/home_screen.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-
-  String apiBaseUrl = "https://abcd.ngrok.io"; // หรือ dotenv สำหรับ Mobile
-
-  runApp(MyApp(apiBaseUrl: apiBaseUrl));
+  runApp(const MyApp(apiBaseUrl: "https://abcd.ngrok.io"));
 }
 
 class MyApp extends StatelessWidget {
@@ -14,11 +17,17 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'AppCar Araluka',
-      home: Scaffold(
-        appBar: AppBar(title: Text("AppCar")),
-        body: Center(child: Text("API Base URL: $apiBaseUrl")),
+    return MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (_) => AuthProvider(ApiService())),
+      ],
+      child: MaterialApp(
+        title: 'AppCar Araluka',
+        debugShowCheckedModeBanner: false,
+        home: const LoginScreen(),
+        routes: {
+          '/home': (_) => const HomeScreen(),
+        },
       ),
     );
   }
