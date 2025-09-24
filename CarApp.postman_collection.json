@@ -1,0 +1,458 @@
+{
+  "info": {
+    "name": "Car Booking API (Full)",
+    "_postman_id": "2f6e9a3d-0000-4000-9000-aaaaaaaaaaaa",
+    "description": "ชุดทดสอบครบทุกบทบาทสำหรับระบบจองรถ",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "base_url", "value": "http://localhost:3000" },
+    { "key": "token_admin", "value": "" },
+    { "key": "token_customer", "value": "" },
+    { "key": "token_vendor", "value": "" },
+    { "key": "token_driver", "value": "" }
+  ],
+  "item": [
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Register - Customer",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"name\":\"Customer One\",\n  \"email\":\"cust1@example.com\",\n  \"password\":\"123456\",\n  \"phone\":\"0801111111\"\n}" },
+            "url": "{{base_url}}/api/register"
+          }
+        },
+        {
+          "name": "Register - Vendor",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"name\":\"Vendor User\",\n  \"email\":\"vendor1@example.com\",\n  \"password\":\"123456\",\n  \"phone\":\"0802222222\",\n  \"shopName\":\"ร้านรถเช่า A\",\n  \"contact\":\"0811111111\",\n  \"address\":\"กรุงเทพฯ\"\n}" },
+            "url": "{{base_url}}/api/register/vendor"
+          }
+        },
+        {
+          "name": "Register - Driver",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"name\":\"Driver User\",\n  \"email\":\"driver1@example.com\",\n  \"password\":\"123456\",\n  \"phone\":\"0803333333\",\n  \"base_lat\":13.7563,\n  \"base_lng\":100.5018,\n  \"service_radius_km\":15\n}" },
+            "url": "{{base_url}}/api/register/driver"
+          }
+        },
+        {
+          "name": "Login (use for any role)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"email\":\"cust1@example.com\",\n  \"password\":\"123456\"\n}" },
+            "url": "{{base_url}}/api/login"
+          }
+        },
+        {
+          "name": "Who am I (/api/me)",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token_customer}}" }],
+            "url": "{{base_url}}/api/me"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Admin",
+      "item": [
+        {
+          "name": "Users - List all",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token_admin}}" }],
+            "url": "{{base_url}}/api/users"
+          }
+        },
+        {
+          "name": "Users - Get by ID",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token_admin}}" }],
+            "url": "{{base_url}}/api/users/1"
+          }
+        },
+        {
+          "name": "Users - Update by ID",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token_admin}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": { "mode": "raw", "raw": "{\n  \"name\":\"Updated Name\",\n  \"phone\":\"0809999999\",\n  \"role\":\"customer\"\n}" },
+            "url": "{{base_url}}/api/users/1"
+          }
+        },
+        {
+          "name": "Users - Delete by ID",
+          "request": {
+            "method": "DELETE",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token_admin}}" }],
+            "url": "{{base_url}}/api/users/1"
+          }
+        },
+        {
+          "name": "Bookings - All",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token_admin}}" }],
+            "url": "{{base_url}}/api/bookings/all"
+          }
+        },
+        {
+          "name": "Payments - All",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token_admin}}" }],
+            "url": "{{base_url}}/api/payments/all"
+          }
+        },
+        {
+          "name": "Receipts - All",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token_admin}}" }],
+            "url": "{{base_url}}/api/receipts/all"
+          }
+        },
+        {
+          "name": "Notifications - Create to User",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token_admin}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": { "mode": "raw", "raw": "{\n  \"user_id\": 2,\n  \"title\":\"แจ้งเตือนจากแอดมิน\",\n  \"message\":\"ข้อความทดสอบ\"\n}" },
+            "url": "{{base_url}}/api/notifications"
+          }
+        },
+        {
+          "name": "Notifications - Delete by ID",
+          "request": {
+            "method": "DELETE",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token_admin}}" }],
+            "url": "{{base_url}}/api/notifications/1"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Vendor",
+      "item": [
+        {
+          "name": "My Vendor Profile (GET)",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token_vendor}}" }],
+            "url": "{{base_url}}/api/vendor/my"
+          }
+        },
+        {
+          "name": "Update Vendor Profile (PUT)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token_vendor}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": { "mode": "raw", "raw": "{\n  \"name\":\"ร้านรถเช่า A (อัปเดท)\",\n  \"contact\":\"0811111111\",\n  \"address\":\"บางนา กรุงเทพฯ\"\n}" },
+            "url": "{{base_url}}/api/vendor/my"
+          }
+        },
+        {
+          "name": "My Bookings",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token_vendor}}" }],
+            "url": "{{base_url}}/api/vendor/my-bookings"
+          }
+        },
+        {
+          "name": "My Payments",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token_vendor}}" }],
+            "url": "{{base_url}}/api/vendor/my-payments"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Cars",
+      "item": [
+        {
+          "name": "Search Cars (Public)",
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/api/cars/search?transmission=automatic&seats=4"
+          }
+        },
+        {
+          "name": "Add Car (Vendor)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token_vendor}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": { "mode": "raw", "raw": "{\n  \"name\": \"Toyota Vios\",\n  \"license_plate\": \"กข-1234\",\n  \"seats\": 4,\n  \"transmission\": \"automatic\",\n  \"bag_small\": 2,\n  \"bag_large\": 1,\n  \"unlimited_mileage\": 1,\n  \"price_per_day\": 1200,\n  \"free_cancellation\": 1,\n  \"location_lat\": 13.7563,\n  \"location_lng\": 100.5018\n}" },
+            "url": "{{base_url}}/api/cars"
+          }
+        },
+        {
+          "name": "Update Car (Vendor)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token_vendor}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": { "mode": "raw", "raw": "{\n  \"name\": \"Toyota Vios 1.5 (2020)\",\n  \"price_per_day\": 1300,\n  \"seats\": 4\n}" },
+            "url": "{{base_url}}/api/cars/1"
+          }
+        },
+        {
+          "name": "Set Car Status (Vendor)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token_vendor}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": { "mode": "raw", "raw": "{ \"is_available\": false }" },
+            "url": "{{base_url}}/api/cars/1/status"
+          }
+        },
+        {
+          "name": "Delete Car (Vendor)",
+          "request": {
+            "method": "DELETE",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token_vendor}}" }],
+            "url": "{{base_url}}/api/cars/1"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Bookings",
+      "item": [
+        {
+          "name": "Create Booking (Customer)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token_customer}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": { "mode": "raw", "raw": "{\n  \"car_id\": 1,\n  \"booking_date\": \"2025-09-26\",\n  \"start_time\": \"2025-09-26 09:00:00\",\n  \"end_time\": \"2025-09-26 18:00:00\",\n  \"driver_required\": true\n}" },
+            "url": "{{base_url}}/api/bookings"
+          }
+        },
+        {
+          "name": "My Bookings (Customer)",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token_customer}}" }],
+            "url": "{{base_url}}/api/bookings/my"
+          }
+        },
+        {
+          "name": "Cancel Booking (Customer or Vendor)",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token_customer}}" }],
+            "url": "{{base_url}}/api/bookings/1/cancel"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Drivers",
+      "item": [
+        {
+          "name": "My Driver Profile (GET)",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token_driver}}" }],
+            "url": "{{base_url}}/api/drivers/me"
+          }
+        },
+        {
+          "name": "Update Driver Profile (PUT)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token_driver}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": { "mode": "raw", "raw": "{\n  \"base_lat\": 13.7563,\n  \"base_lng\": 100.5018,\n  \"service_radius_km\": 20,\n  \"is_available\": 1\n}" },
+            "url": "{{base_url}}/api/drivers/me"
+          }
+        },
+        {
+          "name": "Toggle Availability (PATCH)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token_driver}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": { "mode": "raw", "raw": "{ \"is_available\": true }" },
+            "url": "{{base_url}}/api/drivers/me/status"
+          }
+        },
+        {
+          "name": "My Service History",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token_driver}}" }],
+            "url": "{{base_url}}/api/drivers/my-history"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Driver Assignments",
+      "item": [
+        {
+          "name": "My Jobs (Pending)",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token_driver}}" }],
+            "url": "{{base_url}}/api/driver-assignments/my-jobs"
+          }
+        },
+        {
+          "name": "Accept Job",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token_driver}}" }],
+            "url": "{{base_url}}/api/driver-assignments/1/accept"
+          }
+        },
+        {
+          "name": "Reject Job",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token_driver}}" }],
+            "url": "{{base_url}}/api/driver-assignments/1/reject"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Payments",
+      "item": [
+        {
+          "name": "Pay (Customer)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token_customer}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": { "mode": "raw", "raw": "{\n  \"booking_id\": 1,\n  \"transaction_id\": \"TEST-TXN-123456\",\n  \"payment_method\": \"promptpay\",\n  \"amount\": 1200\n}" },
+            "url": "{{base_url}}/api/payments"
+          }
+        },
+        {
+          "name": "My Payments (Customer)",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token_customer}}" }],
+            "url": "{{base_url}}/api/payments/my"
+          }
+        },
+        {
+          "name": "All Payments (Admin)",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token_admin}}" }],
+            "url": "{{base_url}}/api/payments/all"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Receipts",
+      "item": [
+        {
+          "name": "My Receipts (Customer)",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token_customer}}" }],
+            "url": "{{base_url}}/api/receipts/my"
+          }
+        },
+        {
+          "name": "Get Receipt by ID (Customer)",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token_customer}}" }],
+            "url": "{{base_url}}/api/receipts/1"
+          }
+        },
+        {
+          "name": "All Receipts (Admin)",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token_admin}}" }],
+            "url": "{{base_url}}/api/receipts/all"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Notifications",
+      "item": [
+        {
+          "name": "My Notifications",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token_customer}}" }],
+            "url": "{{base_url}}/api/notifications/my"
+          }
+        },
+        {
+          "name": "Mark as Read",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token_customer}}" }],
+            "url": "{{base_url}}/api/notifications/1/read"
+          }
+        },
+        {
+          "name": "Create Notification (Admin)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token_admin}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": { "mode": "raw", "raw": "{\n  \"user_id\": 2,\n  \"title\": \"แจ้งเตือนระบบ\",\n  \"message\": \"ยินดีต้อนรับสู่ CarApp\"\n}" },
+            "url": "{{base_url}}/api/notifications"
+          }
+        },
+        {
+          "name": "Delete Notification (Admin)",
+          "request": {
+            "method": "DELETE",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token_admin}}" }],
+            "url": "{{base_url}}/api/notifications/1"
+          }
+        }
+      ]
+    }
+  ]
+}
