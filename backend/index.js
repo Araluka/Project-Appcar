@@ -3,15 +3,18 @@ const cors = require('cors');
 const bodyParser = require('body-parser');
 const db = require('./db');
 
-// ----------- const ------------ //
+// ----------- import routes ------------ //
 const authRoutes = require('./routes/auth');
-const authenticate = require('./middleware/authMiddleware'); // ✅ ต้องใช้ ./ แทน ../ เพราะอยู่ใน root เดียวกัน
+const { authenticate } = require('./middleware/authMiddleware');
 const vendorRoutes = require('./routes/vendor');
 const carRoutes = require('./routes/cars');
 const bookingRoutes = require('./routes/bookings');
-const driverRoutes = require('./routes/driver');
+const driverRoutes = require('./routes/drivers');
+const driverAssignmentRoutes = require('./routes/driverAssignments');
 const notificationRoutes = require('./routes/notifications');
-const paymentRoutes = require('./routes/payment'); // เพิ่มการเชื่อมโยง API การชำระเงิน
+const paymentRoutes = require('./routes/payments');
+const receiptRoutes = require('./routes/receipts');
+const userRoutes = require('./routes/users');
 
 const app = express();
 const PORT = 3000;
@@ -19,14 +22,17 @@ const PORT = 3000;
 app.use(cors());
 app.use(bodyParser.json());
 
-// ----------- use ------------ //
+// ----------- use routes ------------ //
 app.use('/api', authRoutes);
-app.use('/api', vendorRoutes);
+app.use('/api/users', userRoutes); // admin จัดการผู้ใช้
+app.use('/api/vendor', vendorRoutes);
 app.use('/api/cars', carRoutes);
 app.use('/api/bookings', bookingRoutes);
-app.use('/api/driver', driverRoutes);
+app.use('/api/drivers', driverRoutes);
+app.use('/api/driver-assignments', driverAssignmentRoutes);
 app.use('/api/notifications', notificationRoutes);
-app.use('/api', paymentRoutes); // เชื่อมโยงเส้นทางชำระเงิน
+app.use('/api/payments', paymentRoutes);
+app.use('/api/receipts', receiptRoutes);
 
 // ✅ ทดสอบ route ที่ต้อง login ก่อนถึง (เช่น /me)
 app.get('/api/me', authenticate, (req, res) => {

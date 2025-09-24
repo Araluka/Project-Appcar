@@ -4,7 +4,7 @@ const connection = mysql.createConnection({
   host: 'localhost',
   user: 'root',
   password: '', // ถ้ามีรหัสผ่านให้ใส่ที่นี่
-  database: 'car_booking_app'
+  database: 'app_car'
 });
 
 connection.connect((err) => {

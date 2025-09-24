@@ -1,91 +1,71 @@
 const express = require('express');
 const router = express.Router();
 const db = require('../db');
+const { authenticate, authorize } = require('../middleware/authMiddleware');
 
-// Mock API สำหรับชำระเงิน
-router.post('/pay', (req, res) => {
-  const { payment_method, total_amount, booking_id } = req.body; // รับข้อมูลการชำระเงินจากลูกค้า
+// =======================================
+// User: ดูใบเสร็จของตัวเอง
+// =======================================
+router.get('/my', authenticate, authorize(['customer']), (req, res) => {
+  const userId = req.user.id;
 
-  // ตรวจสอบวิธีการชำระเงิน
-  const paymentMethods = ['promptpay', 'qr', 'credit_card'];
-  if (!paymentMethods.includes(payment_method)) {
-    return res.status(400).json({ message: 'วิธีการชำระเงินไม่ถูกต้อง' });
-  }
+  const sql = `
+    SELECT r.*, b.booking_date, b.start_time, b.end_time,
+           c.name AS car_name, c.license_plate, v.name AS vendor_name
+    FROM receipts r
+    JOIN bookings b ON r.booking_id = b.id
+    JOIN cars c ON b.car_id = c.id
+    JOIN vendors v ON b.vendor_id = v.id
+    WHERE b.user_id = ?
+    ORDER BY r.created_at DESC
+  `;
 
-  // จำลองการชำระเงิน (สุ่มการชำระเงินที่สำเร็จหรือไม่สำเร็จ)
-  const isPaymentSuccessful = Math.random() > 0.2; // 80% โอกาสในการชำระเงินสำเร็จ
-  const transaction_id = `TXN-${Math.floor(Math.random() * 1000000)}`;
+  db.query(sql, [userId], (err, results) => {
+    if (err) return res.status(500).json({ error: 'Database error' });
+    res.json(results);
+  });
+});
 
-  if (isPaymentSuccessful) {
-    // อัปเดตสถานะการชำระเงินในตาราง receipts
-    const updatePaymentStatusSql = `
-      UPDATE receipts 
-      SET payment_status = 'paid', transaction_id = ? 
-      WHERE booking_id = ?
-    `;
-    
-    db.query(updatePaymentStatusSql, [transaction_id, booking_id], (err, result) => {
-      if (err) {
-        console.error("Error updating payment status in receipts:", err); // ดีบักข้อผิดพลาด
-        return res.status(500).json({ message: 'เกิดข้อผิดพลาดในการอัปเดตสถานะการชำระเงินใน receipts' });
-      }
-      console.log("Payment status updated in receipts:", result); // ดีบักผลลัพธ์จากการอัปเดต
+// =======================================
+// User: ดูใบเสร็จเดี่ยว (ตาม id)
+// =======================================
+router.get('/:id', authenticate, authorize(['customer']), (req, res) => {
+  const receiptId = req.params.id;
+  const userId = req.user.id;
 
-      // INSERT ข้อมูลลงตาราง payments
-      const insertPaymentSql = `
-        INSERT INTO payments (booking_id, transaction_id, payment_method, amount)
-        VALUES (?, ?, ?, ?)
-      `;
-      db.query(insertPaymentSql, [booking_id, transaction_id, payment_method, total_amount], (err2, result2) => {
-        if (err2) {
-          console.error('Error inserting payment data into payments table:', err2); // ดีบักข้อผิดพลาด
-          return res.status(500).json({ message: 'เกิดข้อผิดพลาดในการเพิ่มข้อมูลการชำระเงินใน payments' });
-        }
+  const sql = `
+    SELECT r.*, b.booking_date, b.start_time, b.end_time,
+           c.name AS car_name, v.name AS vendor_name
+    FROM receipts r
+    JOIN bookings b ON r.booking_id = b.id
+    JOIN cars c ON b.car_id = c.id
+    JOIN vendors v ON b.vendor_id = v.id
+    WHERE r.id = ? AND b.user_id = ?
+  `;
 
-        // เพิ่มข้อมูลลงในตาราง receipts (ใบเสร็จ)
-        const insertReceiptSql = `
-          INSERT INTO receipts (booking_id, transaction_id, total_amount, payment_status)
-          VALUES (?, ?, ?, 'paid')
-        `;
-        db.query(insertReceiptSql, [booking_id, transaction_id, total_amount], (err3, result3) => {
-          if (err3) {
-            console.error('Error inserting data into receipts table:', err3); // ดีบักข้อผิดพลาด
-            return res.status(500).json({ message: 'เกิดข้อผิดพลาดในการเพิ่มข้อมูลใบเสร็จใน receipts' });
-          }
+  db.query(sql, [receiptId, userId], (err, results) => {
+    if (err) return res.status(500).json({ error: 'Database error' });
+    if (results.length === 0) return res.status(404).json({ message: 'ไม่พบใบเสร็จ' });
+    res.json(results[0]);
+  });
+});
 
-          console.log("Receipt inserted successfully:", result3); // ดีบักผลลัพธ์จากการ INSERT ใน receipts
-
-          // อัปเดตสถานะการจองในตาราง bookings
-          const updateBookingStatusSql = `
-            UPDATE bookings
-            SET status = 'confirmed' 
-            WHERE id = ?
-          `;
-          
-          db.query(updateBookingStatusSql, [booking_id], (err4, result4) => {
-            if (err4) {
-              console.error("Error updating booking status:", err4); // ดีบักข้อผิดพลาด
-              return res.status(500).json({ message: 'เกิดข้อผิดพลาดในการอัปเดตสถานะการจองใน bookings' });
-            }
-
-            // ส่งการตอบกลับ
-            res.json({
-              message: 'ชำระเงินสำเร็จ',
-              payment_status: 'paid',
-              transaction_id: transaction_id,
-              booking_status: 'confirmed'
-            });
-          });
-        });
-      });
-    });
-  } else {
-    res.json({
-      message: 'การชำระเงินล้มเหลว',
-      payment_status: 'failed',
-      transaction_id: null
-    });
-  }
+// =======================================
+// Admin: ดูใบเสร็จทั้งหมด
+router.get('/all', authenticate, authorize(['admin']), (req, res) => {
+  const sql = `
+    SELECT r.*, u.name AS customer_name, v.name AS vendor_name, c.name AS car_name
+    FROM receipts r
+    JOIN bookings b ON r.booking_id = b.id
+    JOIN users u ON b.user_id = u.id
+    LEFT JOIN vendors v ON b.vendor_id = v.id
+    JOIN cars c ON b.car_id = c.id
+    ORDER BY r.created_at DESC
+  `;
+  db.query(sql, (err, results) => {
+    if (err) return res.status(500).json({ error: 'Database error' });
+    res.json(results);
+  });
 });
 
 module.exports = router;
