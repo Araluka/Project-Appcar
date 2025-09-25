@@ -1,33 +1,18 @@
-// lib/services/token_store_io.dart
 import 'package:shared_preferences/shared_preferences.dart';
 
-class TokenStore {
-  static const _kToken = 'token';
-  static const _kPhone = 'phone';
-
-  static Future<void> save(String token) async {
-    final sp = await SharedPreferences.getInstance();
-    await sp.setString(_kToken, token);
+class TokenStoreImpl {
+  static Future<void> saveToken(String token) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('token', token);
   }
 
-  static Future<String?> read() async {
-    final sp = await SharedPreferences.getInstance();
-    return sp.getString(_kToken);
+  static Future<String?> getToken() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getString('token');
   }
 
-  static Future<void> clear() async {
-    final sp = await SharedPreferences.getInstance();
-    await sp.remove(_kToken);
-    await sp.remove(_kPhone);
-  }
-
-  static Future<void> savePhone(String phone) async {
-    final sp = await SharedPreferences.getInstance();
-    await sp.setString(_kPhone, phone);
-  }
-
-  static Future<String?> readPhone() async {
-    final sp = await SharedPreferences.getInstance();
-    return sp.getString(_kPhone);
+  static Future<void> clearToken() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove('token');
   }
 }

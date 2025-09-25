@@ -1,28 +1,15 @@
-// lib/services/token_store_web.dart
 import 'dart:html' as html;
 
-class TokenStore {
-  static const _kToken = 'token';
-  static const _kPhone = 'phone';
-
-  static Future<void> save(String token) async {
-    html.window.localStorage[_kToken] = token;
+class TokenStoreImpl {
+  static Future<void> saveToken(String token) async {
+    html.window.localStorage['token'] = token;
   }
 
-  static Future<String?> read() async {
-    return html.window.localStorage[_kToken];
+  static Future<String?> getToken() async {
+    return html.window.localStorage['token'];
   }
 
-  static Future<void> clear() async {
-    html.window.localStorage.remove(_kToken);
-    html.window.localStorage.remove(_kPhone);
-  }
-
-  static Future<void> savePhone(String phone) async {
-    html.window.localStorage[_kPhone] = phone;
-  }
-
-  static Future<String?> readPhone() async {
-    return html.window.localStorage[_kPhone];
+  static Future<void> clearToken() async {
+    html.window.localStorage.remove('token');
   }
 }

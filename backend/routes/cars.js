@@ -109,23 +109,42 @@ router.patch('/:id/status', authenticate, authorize(['vendor']), (req, res) => {
 // =======================================
 // Public: Search available cars
 // =======================================
+// routes/cars.js
 router.get('/search', (req, res) => {
   const { location_lat, location_lng, transmission, seats, start_time, end_time } = req.query;
 
-  let sql = `SELECT * FROM cars WHERE is_available = 1`;
-  let params = [];
+  // base query รวมชื่อร้าน + คำนวณระยะถ้าส่งพิกัดมา
+  let sql = `
+    SELECT
+      c.*,
+      v.name AS vendor_name
+      ${location_lat && location_lng ? `,
+      (6371 * acos(
+        cos(radians(?)) * cos(radians(c.location_lat)) *
+        cos(radians(c.location_lng) - radians(?)) +
+        sin(radians(?)) * sin(radians(c.location_lat))
+      )) AS distance_km` : ``}
+    FROM cars c
+    JOIN vendors v ON c.vendor_id = v.id
+    WHERE c.is_available = 1
+  `;
+  const params = [];
 
-  if (transmission) {
-    sql += ` AND transmission = ?`;
-    params.push(transmission);
-  }
-  if (seats) {
-    sql += ` AND seats >= ?`;
-    params.push(seats);
-  }
   if (location_lat && location_lng) {
-    // NOTE: ตรงนี้เป็นเพียงตัวอย่าง ยังไม่ได้คำนวณหาระยะทางจริง
-    sql += ` AND location_lat IS NOT NULL AND location_lng IS NOT NULL`;
+    params.push(location_lat, location_lng, location_lat);
+    // ถ้าอยากฟิลเตอร์ว่า “ต้องมีพิกัด”:
+    sql += ` AND c.location_lat IS NOT NULL AND c.location_lng IS NOT NULL`;
+  }
+
+  if (transmission) { sql += ` AND c.transmission = ?`; params.push(transmission); }
+  if (seats) { sql += ` AND c.seats >= ?`; params.push(seats); }
+
+  // TODO (optional): กันคิวทับเวลา start_time/end_time ที่ส่งมา
+
+  if (location_lat && location_lng) {
+    sql += ` ORDER BY distance_km ASC, c.price_per_day ASC`;
+  } else {
+    sql += ` ORDER BY c.price_per_day ASC, c.id DESC`;
   }
 
   db.query(sql, params, (err, results) => {
@@ -133,5 +152,6 @@ router.get('/search', (req, res) => {
     res.json(results);
   });
 });
+
 
 module.exports = router;

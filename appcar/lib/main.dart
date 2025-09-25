@@ -1,40 +1,28 @@
-// lib/main.dart
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
-import 'services/api_service.dart';
-import 'providers/auth_provider.dart';
-import 'screens/login_screen.dart';
-import 'screens/home_screen.dart';
+import 'app_router.dart';
+import 'config/env.dart';
 
-Future<void> main() async {
-  WidgetsFlutterBinding.ensureInitialized();
+void main() {
+  // อ่านจาก --dart-define
+  const apiBaseUrl = String.fromEnvironment('API_BASE_URL');
+  Env.init(apiBaseUrl: apiBaseUrl);
 
-  // ตั้งค่า base URL ของ backend ที่นี่ (แนะนำใช้ HTTPS จาก ngrok)
-  const baseUrl = "http://192.168.2.91:3000";
-
-  final api = ApiService(baseUrl: baseUrl);
-
-  runApp(MyApp(api: api));
+  runApp(const AppCar());
 }
 
-class MyApp extends StatelessWidget {
-  final ApiService api;
-  const MyApp({super.key, required this.api});
+class AppCar extends StatelessWidget {
+  const AppCar({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return MultiProvider(
-      providers: [
-        ChangeNotifierProvider(create: (_) => AuthProvider(api)),
-      ],
-      child: MaterialApp(
-        title: 'AppCar',
-        debugShowCheckedModeBanner: false,
-        home: const LoginScreen(),
-        routes: {
-          '/home': (_) => const HomeScreen(),
-        },
+    return MaterialApp(
+      title: 'AppCar',
+      debugShowCheckedModeBanner: false,
+      theme: ThemeData(
+        primarySwatch: Colors.blue,
       ),
+      onGenerateRoute: AppRouter.generateRoute,
+      initialRoute: '/login',
     );
   }
 }

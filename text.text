@@ -1,0 +1,24 @@
+[Auth]
+POST /auth/login
+Body: { "email": "string", "password": "string" }
+Res:  { "token": "jwt-string", "user": { "id": 1, "email": "a@b.com", "name": "A" } }
+
+GET /users/me
+Auth: Bearer
+Res:  { "id": 1, "email": "a@b.com", "name": "A", "role": "user" }
+
+[Cars]
+GET /cars/search?area=bangkok&start=2025-09-25T10:00:00Z&end=2025-09-25T18:00:00Z
+Res:  [ { "id": 10, "name": "City 1.5", "vendor_id": 2, "price_per_day": 1200, ... } ]
+
+GET /cars/:id
+Res:  { "id": 10, "name": "...", "images": [...], "features": [...], ... }
+
+[Bookings]
+POST /bookings
+Body: { "car_id": 10, "start_time": "2025-09-25T10:00:00Z", "end_time": "2025-09-25T18:00:00Z", "with_driver": false }
+Res:  { "id": 99, "status": "pending", ... }
+
+GET /bookings/my
+Auth: Bearer
+Res:  [ { "id": 99, "status": "pending", "car": {...}, "start_time": "...", "end_time": "..." } ]
