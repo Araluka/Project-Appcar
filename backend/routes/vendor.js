@@ -38,14 +38,15 @@ router.put('/my', authenticate, authorize(['vendor']), (req, res) => {
 // =======================================
 router.get('/my-bookings', authenticate, authorize(['vendor']), (req, res) => {
   const sql = `
-    SELECT b.id, b.user_id, b.car_id, b.booking_date, b.start_time, b.end_time, b.status, b.price,
-           u.name AS customer_name, c.name AS car_name, c.license_plate
-    FROM bookings b
-    JOIN users u ON b.user_id = u.id
-    JOIN cars c ON b.car_id = c.id
-    WHERE b.vendor_id = (SELECT id FROM vendors WHERE user_id = ?)
-    ORDER BY b.created_at DESC
-  `;
+    SELECT b.*, u.name AS customer_name, u.phone AS customer_phone,
+         c.name AS car_name, v.name AS vendor_name
+  FROM bookings b
+  JOIN users u ON b.user_id = u.id
+  JOIN cars c ON b.car_id = c.id
+  JOIN vendors v ON c.vendor_id = v.id
+  WHERE c.vendor_id IN (SELECT id FROM vendors WHERE user_id = ?)
+  ORDER BY b.created_at DESC
+`;
   db.query(sql, [req.user.id], (err, results) => {
     if (err) return res.status(500).json({ error: 'Database error' });
     res.json(results);

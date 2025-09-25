@@ -2,7 +2,21 @@ const express = require('express');
 const router = express.Router();
 const db = require('../db');
 const { authenticate, authorize } = require('../middleware/authMiddleware');
+const multer = require('multer');
+const path = require('path');
 
+
+// ตั้งค่า storage ของ multer
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, 'uploads/cars/'); // ✅ บอกให้ไปเก็บที่โฟลเดอร์นี้
+  },
+  filename: (req, file, cb) => {
+    cb(null, Date.now() + path.extname(file.originalname)); // ตั้งชื่อไฟล์ unique
+  }
+});
+
+const upload = multer({ storage });
 // =======================================
 // Vendor: Add new car
 // =======================================
@@ -38,7 +52,18 @@ router.post('/', authenticate, authorize(['vendor']), (req, res) => {
     res.status(201).json({ message: 'เพิ่มรถสำเร็จ', carId: result.insertId });
   });
 });
+router.post('/', authenticate, upload.single('image'), (req, res) => {
+  const { name, seats, price } = req.body;
+  const vendorId = req.user.id;
 
+  const imageUrl = req.file ? '/uploads/cars/' + req.file.filename : null;
+
+  const sql = 'INSERT INTO cars (name, seats, price, image_url, vendor_id) VALUES (?, ?, ?, ?, ?)';
+  db.query(sql, [name, seats, price, imageUrl, vendorId], (err, result) => {
+    if (err) return res.status(500).json({ error: 'Database error' });
+    res.json({ message: 'Car added', id: result.insertId, image_url: imageUrl });
+  });
+});
 // =======================================
 // Vendor: Update car
 // =======================================

@@ -55,7 +55,7 @@ class _SignupPageState extends State<SignupPage> {
         context,
         MaterialPageRoute(builder: (_) => const SearchFormPage()),
       );
-    } on DioError catch (e) {
+    } on DioException catch (e) {
       setState(() {
         final data = e.response?.data;
         if (data is Map<String, dynamic>) {

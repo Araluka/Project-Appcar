@@ -28,7 +28,7 @@ class _NotificationsPageState extends State<NotificationsPage> {
       setState(() {
         _notifications = data;
       });
-    } on DioError catch (e) {
+    } on DioException catch (e) {
       setState(() {
         _error = e.response?.data['error'] ?? 'โหลดการแจ้งเตือนล้มเหลว';
       });

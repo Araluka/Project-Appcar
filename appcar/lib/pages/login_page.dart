@@ -2,11 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:dio/dio.dart';
 import '../services/api_service.dart';
 import '../services/token_store.dart';
-import 'customer/search_form_page.dart';
-import 'customer/home_page.dart';
 import 'signup_page.dart';
-import 'vendor/vendor_home_page.dart';
+import 'package:appcar/pages/customer/customer_main_page.dart';
+import 'vendor/vendor_main_page.dart';
 import 'driver/driver_dashboard_page.dart';
+import 'customer/search_form_page.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -42,20 +42,20 @@ class _LoginPageState extends State<LoginPage> {
 
       Widget nextPage;
       if (role == 'customer') {
-        nextPage = const CustomerHomePage();
+        nextPage = const CustomerMainPage(); // ✅ ตรงกับที่เราแก้แล้ว
       } else if (role == 'vendor') {
-        nextPage = const VendorHomePage();
+        nextPage = const VendorMainPage();
       } else if (role == 'driver') {
         nextPage = const DriverDashboardPage();
       } else {
-        nextPage = const SearchFormPage(); // กันเผื่อ
+        nextPage = const SearchFormPage(); // กันเผื่อ role อื่น
       }
 
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(builder: (_) => nextPage),
       );
-    } on DioError catch (e) {
+    } on DioException catch (e) {
       setState(() {
         final data = e.response?.data;
         if (data is Map<String, dynamic>) {

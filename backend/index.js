@@ -2,6 +2,7 @@ const express = require('express');
 const cors = require('cors');
 const bodyParser = require('body-parser');
 const db = require('./db');
+const path = require('path');
 
 // ----------- import routes ------------ //
 const authRoutes = require('./routes/auth');
@@ -21,7 +22,7 @@ const PORT = 3000;
 
 app.use(cors());
 app.use(bodyParser.json());
-
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 // ----------- use routes ------------ //
 app.use('/api', authRoutes);
 app.use('/api/users', userRoutes); // admin จัดการผู้ใช้

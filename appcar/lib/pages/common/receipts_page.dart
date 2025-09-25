@@ -28,7 +28,7 @@ class _ReceiptsPageState extends State<ReceiptsPage> {
       setState(() {
         _receipts = data;
       });
-    } on DioError catch (e) {
+    } on DioException catch (e) {
       setState(() {
         _error = e.response?.data['error'] ?? 'โหลดใบเสร็จล้มเหลว';
       });

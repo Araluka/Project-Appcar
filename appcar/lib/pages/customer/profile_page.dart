@@ -29,7 +29,7 @@ class _ProfilePageState extends State<ProfilePage> {
       setState(() {
         _profile = data;
       });
-    } on DioError catch (e) {
+    } on DioException catch (e) {
       setState(() {
         _error = e.response?.data['error'] ?? 'โหลดข้อมูลล้มเหลว';
       });

@@ -62,7 +62,7 @@ class _SearchFormPageState extends State<SearchFormPage> {
           child: Column(
             children: [
               DropdownButtonFormField<String>(
-                value: _location,
+                initialValue: _location,
                 items: _locations
                     .map((loc) => DropdownMenuItem(
                           value: loc,

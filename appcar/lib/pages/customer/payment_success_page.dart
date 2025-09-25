@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../../models/car.dart';
 import 'home_page.dart';
-import 'home_status_page.dart';
+import 'package:appcar/pages/customer/customer_main_page.dart';
 
 class PaymentSuccessPage extends StatelessWidget {
   final int bookingId;
@@ -64,7 +64,7 @@ class PaymentSuccessPage extends StatelessWidget {
                 onPressed: () {
                   Navigator.pushAndRemoveUntil(
                     context,
-                    MaterialPageRoute(builder: (_) => const CustomerHomePage()),
+                    MaterialPageRoute(builder: (_) => const CustomerMainPage()),
                     (route) => false,
                   );
                 },

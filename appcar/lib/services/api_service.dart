@@ -83,6 +83,16 @@ class ApiService {
     return data.map((b) => Booking.fromJson(b)).toList();
   }
 
+  // ✅ Booking detail
+  Future<Map<String, dynamic>> getBookingDetail(
+      int bookingId, String token) async {
+    final response = await _dio.get(
+      '/api/bookings/$bookingId',
+      options: Options(headers: {'Authorization': 'Bearer $token'}),
+    );
+    return Map<String, dynamic>.from(response.data);
+  }
+
   // ---------------- PROFILE ----------------
   Future<Map<String, dynamic>> getProfile(String token) async {
     final response = await _dio.get(
@@ -121,11 +131,41 @@ class ApiService {
       '/api/payments',
       data: {
         'booking_id': bookingId,
-        'transaction_id':
-            DateTime.now().millisecondsSinceEpoch.toString(), // mock
+        'transaction_id': DateTime.now().millisecondsSinceEpoch.toString(),
         'payment_method': method,
         'amount': amount,
       },
+      options: Options(headers: {'Authorization': 'Bearer $token'}),
+    );
+    return Map<String, dynamic>.from(response.data);
+  }
+
+  // ---------------- CANCEL BOOKING ----------------
+
+  Future<Map<String, dynamic>> cancelBooking(
+      int bookingId, String token) async {
+    final response = await _dio.patch(
+      '/api/bookings/$bookingId/cancel',
+      options: Options(headers: {'Authorization': 'Bearer $token'}),
+    );
+    return Map<String, dynamic>.from(response.data);
+  }
+
+// ---------------- VENDOR BOOKINGS ----------------
+  Future<List<Booking>> getVendorBookings(String token) async {
+    final response = await _dio.get(
+      '/api/vendor/my-bookings',
+      options: Options(headers: {'Authorization': 'Bearer $token'}),
+    );
+    final data = response.data as List;
+    return data.map((b) => Booking.fromJson(b)).toList();
+  }
+
+// ✅ Vendor return car
+  Future<Map<String, dynamic>> returnBooking(
+      int bookingId, String token) async {
+    final response = await _dio.patch(
+      '/api/bookings/$bookingId/return',
       options: Options(headers: {'Authorization': 'Bearer $token'}),
     );
     return Map<String, dynamic>.from(response.data);
