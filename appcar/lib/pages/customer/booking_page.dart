@@ -44,10 +44,13 @@ class _BookingPageState extends State<BookingPage> {
         token: token!,
       );
 
-      // ✅ เช็กว่ามี booking_id กลับมามั้ย
-      if (response['booking_id'] != null) {
-        final bookingId = response['booking_id'];
+      // ✅ Debug log
+      print("Booking response: $response");
 
+      // ✅ รองรับทั้ง booking_id และ bookingId
+      final bookingId = response['booking_id'] ?? response['bookingId'];
+
+      if (bookingId != null) {
         final days = widget.endDate.difference(widget.startDate).inDays;
         final carCost = days * widget.car.pricePerDay;
         final driverCost = _driverRequired ? days * driverFeePerDay : 0;
@@ -68,7 +71,7 @@ class _BookingPageState extends State<BookingPage> {
         );
       } else {
         setState(() {
-          _error = "Booking failed: no booking_id returned";
+          _error = "Booking failed: booking_id not found in response";
         });
       }
     } catch (e) {

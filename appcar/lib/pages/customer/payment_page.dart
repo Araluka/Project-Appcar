@@ -26,7 +26,7 @@ class PaymentPage extends StatefulWidget {
 }
 
 class _PaymentPageState extends State<PaymentPage> {
-  String _selectedMethod = "promptpay"; // ค่าเริ่มต้น
+  String _selectedMethod = "promptpay";
   bool _loading = false;
   String? _error;
 
@@ -79,7 +79,6 @@ class _PaymentPageState extends State<PaymentPage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // ✅ Summary card
             Card(
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(12),
@@ -122,8 +121,6 @@ class _PaymentPageState extends State<PaymentPage> {
                 ),
               ),
             ),
-
-            // ✅ Payment method selection
             const Text("เลือกวิธีชำระเงิน",
                 style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
             const SizedBox(height: 10),
@@ -149,10 +146,8 @@ class _PaymentPageState extends State<PaymentPage> {
               secondary: const Icon(Icons.account_balance),
             ),
             const SizedBox(height: 20),
-
             if (_error != null)
               Text(_error!, style: const TextStyle(color: Colors.red)),
-
             const SizedBox(height: 20),
             ElevatedButton(
               onPressed: _loading ? null : _confirmPayment,
