@@ -1,7 +1,7 @@
 import 'package:dio/dio.dart';
 import '../config/env.dart';
 import '../models/car.dart';
-import '../models/booking.dart';
+import '../models/booking.dart'; // ✅ เพิ่มบรรทัดนี้
 
 class ApiService {
   final Dio _dio;
@@ -23,12 +23,18 @@ class ApiService {
   }
 
   Future<Map<String, dynamic>> register(
-      String name, String email, String password, String phone) async {
+    String name,
+    String email,
+    String password,
+    String phone, {
+    String role = "customer", // ✅ default = customer
+  }) async {
     final response = await _dio.post('/api/register', data: {
       'name': name,
       'email': email,
       'password': password,
       'phone': phone,
+      'role': role,
     });
     return Map<String, dynamic>.from(response.data);
   }
@@ -39,13 +45,20 @@ class ApiService {
     required double locationLng,
     required String startTime,
     required String endTime,
+    String? token,
   }) async {
-    final response = await _dio.get('/api/cars/search', queryParameters: {
-      'location_lat': locationLat,
-      'location_lng': locationLng,
-      'start_time': startTime,
-      'end_time': endTime,
-    });
+    final response = await _dio.get(
+      '/api/cars/search',
+      queryParameters: {
+        'location_lat': locationLat,
+        'location_lng': locationLng,
+        'start_time': startTime,
+        'end_time': endTime,
+      },
+      options: token != null
+          ? Options(headers: {'Authorization': 'Bearer $token'})
+          : null,
+    );
 
     final data = response.data as List;
     return data.map((c) => Car.fromJson(c)).toList();
@@ -74,7 +87,7 @@ class ApiService {
     return Map<String, dynamic>.from(response.data);
   }
 
-  Future<List<Booking>> getMyBookings(String token) async {
+  Future<List<Booking>> getCustomerBookings(String token) async {
     final response = await _dio.get(
       '/api/bookings/my',
       options: Options(headers: {'Authorization': 'Bearer $token'}),
@@ -141,7 +154,6 @@ class ApiService {
   }
 
   // ---------------- CANCEL BOOKING ----------------
-
   Future<Map<String, dynamic>> cancelBooking(
       int bookingId, String token) async {
     final response = await _dio.patch(
@@ -151,7 +163,7 @@ class ApiService {
     return Map<String, dynamic>.from(response.data);
   }
 
-// ---------------- VENDOR BOOKINGS ----------------
+  // ---------------- VENDOR BOOKINGS ----------------
   Future<List<Booking>> getVendorBookings(String token) async {
     final response = await _dio.get(
       '/api/vendor/my-bookings',
@@ -161,11 +173,58 @@ class ApiService {
     return data.map((b) => Booking.fromJson(b)).toList();
   }
 
-// ✅ Vendor return car
+  // ✅ Vendor return car
   Future<Map<String, dynamic>> returnBooking(
       int bookingId, String token) async {
     final response = await _dio.patch(
       '/api/bookings/$bookingId/return',
+      options: Options(headers: {'Authorization': 'Bearer $token'}),
+    );
+    return Map<String, dynamic>.from(response.data);
+  }
+
+  // ---------------- VENDOR CARS ----------------
+  Future<List<Map<String, dynamic>>> getMyCars(String token) async {
+    final response = await _dio.get(
+      '/api/cars/my',
+      options: Options(headers: {'Authorization': 'Bearer $token'}),
+    );
+    return List<Map<String, dynamic>>.from(response.data);
+  }
+
+  Future<Map<String, dynamic>> addCar(
+      Map<String, dynamic> carData, String token) async {
+    final response = await _dio.post(
+      '/api/cars',
+      data: carData,
+      options: Options(headers: {'Authorization': 'Bearer $token'}),
+    );
+    return Map<String, dynamic>.from(response.data);
+  }
+
+  Future<Map<String, dynamic>> updateCar(
+      int carId, Map<String, dynamic> carData, String token) async {
+    final response = await _dio.put(
+      '/api/cars/$carId',
+      data: carData,
+      options: Options(headers: {'Authorization': 'Bearer $token'}),
+    );
+    return Map<String, dynamic>.from(response.data);
+  }
+
+  Future<Map<String, dynamic>> deleteCar(int carId, String token) async {
+    final response = await _dio.delete(
+      '/api/cars/$carId',
+      options: Options(headers: {'Authorization': 'Bearer $token'}),
+    );
+    return Map<String, dynamic>.from(response.data);
+  }
+
+  // ---------------- VENDOR BOOKING DETAIL ----------------
+  Future<Map<String, dynamic>> getVendorBookingDetail(
+      int bookingId, String token) async {
+    final response = await _dio.get(
+      '/api/vendor/booking/$bookingId',
       options: Options(headers: {'Authorization': 'Bearer $token'}),
     );
     return Map<String, dynamic>.from(response.data);

@@ -2,11 +2,17 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../../services/api_service.dart';
 import '../../services/token_store.dart';
+import '../../config/env.dart';
 
 class BookingDetailPage extends StatefulWidget {
   final int bookingId;
+  final String token;
 
-  const BookingDetailPage({super.key, required this.bookingId});
+  const BookingDetailPage({
+    super.key,
+    required this.bookingId,
+    required this.token,
+  });
 
   @override
   State<BookingDetailPage> createState() => _BookingDetailPageState();
@@ -25,9 +31,8 @@ class _BookingDetailPageState extends State<BookingDetailPage> {
 
   Future<void> _fetchBookingDetail() async {
     try {
-      final token = await TokenStore.getToken();
       final response =
-          await ApiService().getBookingDetail(widget.bookingId, token!);
+          await ApiService().getBookingDetail(widget.bookingId, widget.token);
       setState(() {
         booking = response;
         _loading = false;
@@ -42,11 +47,10 @@ class _BookingDetailPageState extends State<BookingDetailPage> {
 
   Future<void> _cancelBooking() async {
     try {
-      final token = await TokenStore.getToken();
-      await ApiService().cancelBooking(widget.bookingId, token!);
+      await ApiService().cancelBooking(widget.bookingId, widget.token);
       if (!mounted) return;
-      ScaffoldMessenger.of(context)
-          .showSnackBar(const SnackBar(content: Text("Booking cancelled")));
+      ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("Booking cancelled successfully")));
       Navigator.pop(context, true);
     } catch (e) {
       ScaffoldMessenger.of(context)
@@ -112,52 +116,71 @@ class _BookingDetailPageState extends State<BookingDetailPage> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Card(
+                            shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12)),
                             child: ListTile(
-                              leading:
-                                  const Icon(Icons.directions_car, size: 40),
-                              title: Text(booking!['car_name'] ?? ''),
-                              subtitle:
-                                  Text("ร้าน: ${booking!['vendor_name']}"),
+                              leading: (booking!['image_url'] != null &&
+                                      booking!['image_url']
+                                          .toString()
+                                          .isNotEmpty)
+                                  ? ClipRRect(
+                                      borderRadius: BorderRadius.circular(8),
+                                      child: Image.network(
+                                        "${Env.apiBaseUrl}${booking!['image_url']}",
+                                        width: 60,
+                                        height: 60,
+                                        fit: BoxFit.cover,
+                                        errorBuilder: (c, e, s) => const Icon(
+                                            Icons.directions_car,
+                                            size: 40),
+                                      ),
+                                    )
+                                  : const Icon(Icons.directions_car, size: 40),
+                              title: Text(
+                                booking!['car_name'] ?? '',
+                                style: const TextStyle(
+                                    fontSize: 18, fontWeight: FontWeight.bold),
+                              ),
+                              subtitle: Text(
+                                  "ร้าน: ${booking!['vendor_name'] ?? ''}"),
                             ),
                           ),
                           const SizedBox(height: 20),
+
+                          // Timeline
                           _buildTimeline(
-                              "จองรถ",
-                              formatter.format(
-                                  DateTime.parse(booking!['created_at'])),
-                              done: true),
-                          _buildTimeline("กำลังใช้งาน",
-                              "${formatter.format(DateTime.parse(booking!['start_time']))} - ${formatter.format(DateTime.parse(booking!['end_time']))}",
-                              current: booking!['status'] == 'confirmed',
-                              done: booking!['status'] == 'completed'),
+                            "จองรถ",
+                            formatter.format(
+                                DateTime.parse(booking!['created_at'])
+                                    .toLocal()),
+                            done: true,
+                          ),
                           _buildTimeline(
-                              "คืนรถ",
-                              formatter
-                                  .format(DateTime.parse(booking!['end_time'])),
-                              current: booking!['status'] == 'pending_return',
-                              done: booking!['status'] == 'completed'),
-                          _buildTimeline("รีวิว", "หลังใช้งาน",
-                              current: booking!['status'] == 'completed'),
+                            "กำลังใช้งาน",
+                            "${formatter.format(DateTime.parse(booking!['start_time']).toLocal())} - ${formatter.format(DateTime.parse(booking!['end_time']).toLocal())}",
+                            current: booking!['status'] == 'confirmed',
+                            done: booking!['status'] == 'completed',
+                          ),
+                          _buildTimeline(
+                            "คืนรถ",
+                            formatter.format(
+                                DateTime.parse(booking!['end_time']).toLocal()),
+                            current: booking!['status'] == 'pending_return',
+                            done: booking!['status'] == 'completed',
+                          ),
+                          _buildTimeline(
+                            "รีวิว",
+                            "หลังใช้งาน",
+                            current: booking!['status'] == 'completed',
+                          ),
+
                           const SizedBox(height: 20),
+
+                          // Cancel button
                           if (booking!['status'] == 'pending' ||
                               booking!['status'] == 'confirmed')
                             ElevatedButton(
-                              onPressed: () async {
-                                try {
-                                  final token = await TokenStore.getToken();
-                                  await ApiService()
-                                      .cancelBooking(widget.bookingId, token!);
-                                  if (!mounted) return;
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                      const SnackBar(
-                                          content: Text("Booking cancelled")));
-                                  Navigator.pop(context, true);
-                                } catch (e) {
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                      SnackBar(
-                                          content: Text("Cancel failed: $e")));
-                                }
-                              },
+                              onPressed: _cancelBooking,
                               style: ElevatedButton.styleFrom(
                                   backgroundColor: Colors.red),
                               child: const Text("ยกเลิกการจอง"),

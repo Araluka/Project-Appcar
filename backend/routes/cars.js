@@ -5,20 +5,58 @@ const { authenticate, authorize } = require('../middleware/authMiddleware');
 const multer = require('multer');
 const path = require('path');
 
+// helper: absolute URL
+const toAbsUrl = (req, url) => {
+  if (!url) return url;
+  if (/^https?:\/\//i.test(url)) return url;
+  return `${req.protocol}://${req.get('host')}${url.startsWith('/') ? '' : '/'}${url}`;
+};
 
 // ตั้งค่า storage ของ multer
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
-    cb(null, 'uploads/cars/'); // ✅ บอกให้ไปเก็บที่โฟลเดอร์นี้
+    cb(null, 'uploads/cars/');
   },
   filename: (req, file, cb) => {
-    cb(null, Date.now() + path.extname(file.originalname)); // ตั้งชื่อไฟล์ unique
+    cb(null, Date.now() + path.extname(file.originalname));
   }
 });
-
 const upload = multer({ storage });
+
 // =======================================
-// Vendor: Add new car
+// Public: list cars (ทุกคัน)
+// =======================================
+router.get('/', (req, res) => {
+  const sql = `
+    SELECT id, vendor_id, name, license_plate, image_url, price_per_day,
+           is_available, seats, transmission, location_lat, location_lng
+    FROM cars ORDER BY id DESC
+  `;
+  db.query(sql, [], (err, rows) => {
+    if (err) return res.status(500).json({ error: 'Database error' });
+    res.json(rows.map(r => ({ ...r, image_url: toAbsUrl(req, r.image_url) })));
+  });
+});
+
+// =======================================
+// Vendor: list only my cars
+// =======================================
+router.get('/my', authenticate, authorize(['vendor']), (req, res) => {
+  const sql = `
+    SELECT id, vendor_id, name, license_plate, image_url, price_per_day,
+           is_available, seats, transmission, location_lat, location_lng
+    FROM cars
+    WHERE vendor_id = (SELECT id FROM vendors WHERE user_id = ?)
+    ORDER BY id DESC
+  `;
+  db.query(sql, [req.user.id], (err, rows) => {
+    if (err) return res.status(500).json({ error: 'Database error' });
+    res.json(rows.map(r => ({ ...r, image_url: toAbsUrl(req, r.image_url) })));
+  });
+});
+
+// =======================================
+// Vendor: Add new car (JSON)
 // =======================================
 router.post('/', authenticate, authorize(['vendor']), (req, res) => {
   const {
@@ -52,18 +90,16 @@ router.post('/', authenticate, authorize(['vendor']), (req, res) => {
     res.status(201).json({ message: 'เพิ่มรถสำเร็จ', carId: result.insertId });
   });
 });
-router.post('/', authenticate, upload.single('image'), (req, res) => {
-  const { name, seats, price } = req.body;
-  const vendorId = req.user.id;
 
-  const imageUrl = req.file ? '/uploads/cars/' + req.file.filename : null;
-
-  const sql = 'INSERT INTO cars (name, seats, price, image_url, vendor_id) VALUES (?, ?, ?, ?, ?)';
-  db.query(sql, [name, seats, price, imageUrl, vendorId], (err, result) => {
-    if (err) return res.status(500).json({ error: 'Database error' });
-    res.json({ message: 'Car added', id: result.insertId, image_url: imageUrl });
-  });
+// =======================================
+// Vendor: (optional) Upload car image
+// =======================================
+router.post('/upload-image', authenticate, authorize(['vendor']), upload.single('image'), (req, res) => {
+  if (!req.file) return res.status(400).json({ error: 'ไม่พบไฟล์รูป' });
+  const imageUrl = '/uploads/cars/' + req.file.filename;
+  res.json({ message: 'อัปโหลดรูปสำเร็จ', image_url: imageUrl });
 });
+
 // =======================================
 // Vendor: Update car
 // =======================================
@@ -98,7 +134,6 @@ router.put('/:id', authenticate, authorize(['vendor']), (req, res) => {
 // =======================================
 router.delete('/:id', authenticate, authorize(['vendor']), (req, res) => {
   const carId = req.params.id;
-
   const sql = `
     DELETE FROM cars WHERE id = ? AND vendor_id = (SELECT id FROM vendors WHERE user_id = ?)
   `;
@@ -134,13 +169,11 @@ router.patch('/:id/status', authenticate, authorize(['vendor']), (req, res) => {
 // =======================================
 // Public: Search available cars
 // =======================================
-// routes/cars.js
 router.get('/search', (req, res) => {
   const { location_lat, location_lng, transmission, seats, start_time, end_time } = req.query;
 
-  // base query รวมชื่อร้าน + คำนวณระยะถ้าส่งพิกัดมา
   let sql = `
-    SELECT
+    SELECT DISTINCT
       c.*,
       v.name AS vendor_name
       ${location_lat && location_lng ? `,
@@ -151,20 +184,33 @@ router.get('/search', (req, res) => {
       )) AS distance_km` : ``}
     FROM cars c
     JOIN vendors v ON c.vendor_id = v.id
-    WHERE c.is_available = 1
   `;
+
   const params = [];
+
+  if (start_time && end_time) {
+    sql += `
+      LEFT JOIN bookings b
+        ON b.car_id = c.id
+        AND b.status IN ('pending','confirmed')
+        AND NOT (b.end_time <= ? OR b.start_time >= ?)
+    `;
+    params.push(start_time, end_time);
+  }
+
+  sql += ` WHERE c.is_available = 1`;
 
   if (location_lat && location_lng) {
     params.push(location_lat, location_lng, location_lat);
-    // ถ้าอยากฟิลเตอร์ว่า “ต้องมีพิกัด”:
     sql += ` AND c.location_lat IS NOT NULL AND c.location_lng IS NOT NULL`;
   }
 
   if (transmission) { sql += ` AND c.transmission = ?`; params.push(transmission); }
   if (seats) { sql += ` AND c.seats >= ?`; params.push(seats); }
 
-  // TODO (optional): กันคิวทับเวลา start_time/end_time ที่ส่งมา
+  if (start_time && end_time) {
+    sql += ` AND b.id IS NULL`;
+  }
 
   if (location_lat && location_lng) {
     sql += ` ORDER BY distance_km ASC, c.price_per_day ASC`;
@@ -174,9 +220,8 @@ router.get('/search', (req, res) => {
 
   db.query(sql, params, (err, results) => {
     if (err) return res.status(500).json({ error: 'Database error' });
-    res.json(results);
+    res.json(results.map(r => ({ ...r, image_url: toAbsUrl(req, r.image_url) })));
   });
 });
-
 
 module.exports = router;

@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../../models/car.dart';
-import 'home_page.dart';
-import 'package:appcar/pages/customer/customer_main_page.dart';
+import 'customer_main_page.dart';
 
 class PaymentSuccessPage extends StatelessWidget {
+  final String token; // ✅ รับ token ไว้
   final int bookingId;
   final Car car;
   final DateTime startDate;
@@ -13,6 +13,7 @@ class PaymentSuccessPage extends StatelessWidget {
 
   const PaymentSuccessPage({
     super.key,
+    required this.token, // ✅ ต้องใส่ token ด้วย
     required this.bookingId,
     required this.car,
     required this.startDate,
@@ -32,8 +33,10 @@ class PaymentSuccessPage extends StatelessWidget {
             children: [
               const Icon(Icons.check_circle, size: 100, color: Colors.green),
               const SizedBox(height: 16),
-              const Text("การชำระเงินสำเร็จ!",
-                  style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
+              const Text(
+                "การชำระเงินสำเร็จ!",
+                style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+              ),
               const SizedBox(height: 24),
               Card(
                 shape: RoundedRectangleBorder(
@@ -44,17 +47,22 @@ class PaymentSuccessPage extends StatelessWidget {
                   padding: const EdgeInsets.all(16),
                   child: Column(
                     children: [
-                      Text("Booking #$bookingId",
-                          style: const TextStyle(
-                              fontSize: 16, fontWeight: FontWeight.bold)),
+                      Text(
+                        "Booking #$bookingId",
+                        style: const TextStyle(
+                            fontSize: 16, fontWeight: FontWeight.bold),
+                      ),
                       const SizedBox(height: 8),
                       Text(car.name),
                       Text(
-                          "${formatter.format(startDate)} → ${formatter.format(endDate)}"),
+                        "${formatter.format(startDate)} → ${formatter.format(endDate)}",
+                      ),
                       const SizedBox(height: 8),
-                      Text("ยอดที่จ่าย: ฿${totalCost.toStringAsFixed(0)}",
-                          style: const TextStyle(
-                              fontSize: 16, fontWeight: FontWeight.bold)),
+                      Text(
+                        "ยอดที่จ่าย: ฿${totalCost.toStringAsFixed(0)}",
+                        style: const TextStyle(
+                            fontSize: 16, fontWeight: FontWeight.bold),
+                      ),
                     ],
                   ),
                 ),
@@ -64,7 +72,10 @@ class PaymentSuccessPage extends StatelessWidget {
                 onPressed: () {
                   Navigator.pushAndRemoveUntil(
                     context,
-                    MaterialPageRoute(builder: (_) => const CustomerMainPage()),
+                    MaterialPageRoute(
+                      builder: (_) =>
+                          CustomerMainPage(token: token), // ✅ ส่ง token
+                    ),
                     (route) => false,
                   );
                 },

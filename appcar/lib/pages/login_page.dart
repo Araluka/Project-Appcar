@@ -42,13 +42,13 @@ class _LoginPageState extends State<LoginPage> {
 
       Widget nextPage;
       if (role == 'customer') {
-        nextPage = const CustomerMainPage(); // ✅ ตรงกับที่เราแก้แล้ว
+        nextPage = CustomerMainPage(token: token);
       } else if (role == 'vendor') {
-        nextPage = const VendorMainPage();
+        nextPage = const VendorMainPage(); // 👈 เด้งไปหน้า VendorMainPage
       } else if (role == 'driver') {
         nextPage = const DriverDashboardPage();
       } else {
-        nextPage = const SearchFormPage(); // กันเผื่อ role อื่น
+        nextPage = SearchFormPage(token: token);
       }
 
       Navigator.pushReplacement(

@@ -2,15 +2,14 @@ import 'package:flutter/material.dart';
 import '../../services/api_service.dart';
 import '../../services/token_store.dart';
 
-class ProfilePage extends StatefulWidget {
-  final String token; // ✅ รับ token
-  const ProfilePage({super.key, required this.token});
+class VendorProfilePage extends StatefulWidget {
+  const VendorProfilePage({super.key});
 
   @override
-  State<ProfilePage> createState() => _ProfilePageState();
+  State<VendorProfilePage> createState() => _VendorProfilePageState();
 }
 
-class _ProfilePageState extends State<ProfilePage> {
+class _VendorProfilePageState extends State<VendorProfilePage> {
   Map<String, dynamic>? _profile;
   bool _loading = true;
   String? _error;
@@ -23,7 +22,8 @@ class _ProfilePageState extends State<ProfilePage> {
 
   Future<void> _fetchProfile() async {
     try {
-      final response = await ApiService().getProfile(widget.token);
+      final token = await TokenStore.getToken();
+      final response = await ApiService().getProfile(token!);
       setState(() {
         _profile = response;
         _loading = false;
@@ -59,7 +59,7 @@ class _ProfilePageState extends State<ProfilePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text("โปรไฟล์"),
+        title: const Text("โปรไฟล์ร้านค้า"),
         automaticallyImplyLeading: false,
       ),
       body: _loading
@@ -85,7 +85,7 @@ class _ProfilePageState extends State<ProfilePage> {
                                   CircleAvatar(
                                     radius: 35,
                                     backgroundColor: Colors.blue.shade100,
-                                    child: const Icon(Icons.person,
+                                    child: const Icon(Icons.store,
                                         size: 40, color: Colors.blue),
                                   ),
                                   const SizedBox(width: 16),
@@ -95,7 +95,8 @@ class _ProfilePageState extends State<ProfilePage> {
                                           CrossAxisAlignment.start,
                                       children: [
                                         Text(
-                                          _profile!['name'] ?? 'ไม่ทราบชื่อ',
+                                          _profile!['name'] ??
+                                              'ไม่ทราบชื่อร้าน',
                                           style: const TextStyle(
                                             fontSize: 20,
                                             fontWeight: FontWeight.bold,
@@ -118,7 +119,7 @@ class _ProfilePageState extends State<ProfilePage> {
 
                           const SizedBox(height: 20),
 
-                          // ✅ ข้อมูลเพิ่มเติมตาม role
+                          // ✅ ข้อมูลเพิ่มเติม
                           Card(
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(12),
@@ -130,28 +131,14 @@ class _ProfilePageState extends State<ProfilePage> {
                                 children: [
                                   _buildInfoRow(Icons.phone, "เบอร์โทร",
                                       _profile!['phone'] ?? '-'),
-                                  if (_profile!['role'] == 'vendor') ...[
-                                    _buildInfoRow(Icons.store, "ชื่อร้าน",
-                                        _profile!['vendor_name'] ?? '-'),
-                                    _buildInfoRow(Icons.location_on, "ที่อยู่",
-                                        _profile!['address'] ?? 'ไม่ระบุ'),
-                                    _buildInfoRow(
-                                        Icons.directions_car,
-                                        "จำนวนรถ",
-                                        "${_profile!['cars_count'] ?? 0} คัน"),
-                                    _buildInfoRow(Icons.bookmark, "จำนวนการจอง",
-                                        "${_profile!['bookings_count'] ?? 0} ครั้ง"),
-                                    _buildInfoRow(Icons.star, "คะแนนรีวิว",
-                                        "${_profile!['rating'] ?? '-'} / 5"),
-                                  ],
-                                  if (_profile!['role'] == 'driver') ...[
-                                    _buildInfoRow(Icons.map, "พื้นที่บริการ",
-                                        _profile!['service_area'] ?? '-'),
-                                  ],
-                                  if (_profile!['role'] == 'customer') ...[
-                                    _buildInfoRow(
-                                        Icons.person, "ประเภทผู้ใช้", "ลูกค้า"),
-                                  ],
+                                  _buildInfoRow(Icons.location_on, "ที่อยู่",
+                                      _profile!['address'] ?? 'ไม่ระบุ'),
+                                  _buildInfoRow(Icons.directions_car, "จำนวนรถ",
+                                      "${_profile!['cars_count'] ?? 0} คัน"),
+                                  _buildInfoRow(Icons.bookmark, "จำนวนการจอง",
+                                      "${_profile!['bookings_count'] ?? 0} ครั้ง"),
+                                  _buildInfoRow(Icons.star, "คะแนนรีวิว",
+                                      "${_profile!['rating'] ?? '-'} / 5"),
                                 ],
                               ),
                             ),
@@ -161,14 +148,13 @@ class _ProfilePageState extends State<ProfilePage> {
 
                           // ✅ ปุ่ม logout
                           ElevatedButton.icon(
-                            onPressed: () async {
-                              await TokenStore.clearToken();
-                              if (!mounted) return;
-                              Navigator.pushNamedAndRemoveUntil(
-                                  context, '/login', (route) => false);
+                            onPressed: () {
+                              TokenStore.clearToken();
+                              Navigator.pushReplacementNamed(context, '/login');
                             },
                             style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.black,
+                              backgroundColor:
+                                  const Color.fromARGB(255, 0, 0, 0),
                               minimumSize: const Size.fromHeight(50),
                             ),
                             icon: const Icon(Icons.logout),

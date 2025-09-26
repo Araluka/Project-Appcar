@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
-import '../../services/api_service.dart';
+import 'package:intl/intl.dart';
 import 'car_list_page.dart';
 
 class SearchFormPage extends StatefulWidget {
-  const SearchFormPage({super.key});
+  final String token; // ✅ รับ token มาจาก main
+  const SearchFormPage({super.key, required this.token});
 
   @override
   State<SearchFormPage> createState() => _SearchFormPageState();
@@ -16,6 +17,7 @@ class _SearchFormPageState extends State<SearchFormPage> {
   DateTime? _endDate;
 
   final List<String> _locations = ['Suvarnabhumi', 'Don Mueang', 'Bangkok'];
+  final DateFormat _formatter = DateFormat('dd MMM yyyy');
 
   Future<void> _pickDate(BuildContext context, bool isStart) async {
     final DateTime? picked = await showDatePicker(
@@ -38,10 +40,18 @@ class _SearchFormPageState extends State<SearchFormPage> {
 
   void _submit() {
     if (_formKey.currentState!.validate()) {
+      if (_startDate == null || _endDate == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("กรุณาเลือกวันเริ่มต้นและสิ้นสุด")),
+        );
+        return;
+      }
+
       Navigator.push(
         context,
         MaterialPageRoute(
           builder: (_) => CarListPage(
+            token: widget.token, // ✅ ตอนนี้ไม่แดงแล้ว
             location: _location!,
             startDate: _startDate!,
             endDate: _endDate!,
@@ -54,7 +64,10 @@ class _SearchFormPageState extends State<SearchFormPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text("Search Cars")),
+      appBar: AppBar(
+        title: const Text("Search Cars"),
+        automaticallyImplyLeading: false,
+      ),
       body: Padding(
         padding: const EdgeInsets.all(24),
         child: Form(
@@ -62,7 +75,7 @@ class _SearchFormPageState extends State<SearchFormPage> {
           child: Column(
             children: [
               DropdownButtonFormField<String>(
-                initialValue: _location,
+                value: _location,
                 items: _locations
                     .map((loc) => DropdownMenuItem(
                           value: loc,
@@ -89,7 +102,7 @@ class _SearchFormPageState extends State<SearchFormPage> {
                       onPressed: () => _pickDate(context, true),
                       child: Text(_startDate == null
                           ? "Pick Start Date"
-                          : _startDate.toString().split(' ')[0]),
+                          : _formatter.format(_startDate!)),
                     ),
                   ),
                   const SizedBox(width: 16),
@@ -98,7 +111,7 @@ class _SearchFormPageState extends State<SearchFormPage> {
                       onPressed: () => _pickDate(context, false),
                       child: Text(_endDate == null
                           ? "Pick End Date"
-                          : _endDate.toString().split(' ')[0]),
+                          : _formatter.format(_endDate!)),
                     ),
                   ),
                 ],
@@ -106,6 +119,10 @@ class _SearchFormPageState extends State<SearchFormPage> {
               const SizedBox(height: 32),
               ElevatedButton(
                 onPressed: _submit,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.black,
+                  minimumSize: const Size.fromHeight(50),
+                ),
                 child: const Text("Search"),
               )
             ],

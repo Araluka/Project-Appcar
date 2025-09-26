@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:dio/dio.dart';
 import '../services/api_service.dart';
 import '../services/token_store.dart';
 import 'customer/search_form_page.dart';
 import 'login_page.dart';
+import 'customer/customer_main_page.dart';
+import 'vendor/vendor_main_page.dart';
+import 'driver/driver_dashboard_page.dart';
 
 class SignupPage extends StatefulWidget {
   const SignupPage({super.key});
@@ -18,6 +20,8 @@ class _SignupPageState extends State<SignupPage> {
   final TextEditingController _phoneController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   final TextEditingController _confirmController = TextEditingController();
+
+  String _selectedRole = "customer"; // ✅ default role
 
   bool _loading = false;
   String? _error;
@@ -36,11 +40,12 @@ class _SignupPageState extends State<SignupPage> {
     });
 
     try {
-      final Map<String, dynamic> response = await ApiService().register(
+      final response = await ApiService().register(
         _nameController.text.trim(),
         _emailController.text.trim(),
         _passwordController.text.trim(),
         _phoneController.text.trim(),
+        role: _selectedRole, // ✅ ส่ง role ไปด้วย
       );
 
       final String token = response['token'];
@@ -50,27 +55,30 @@ class _SignupPageState extends State<SignupPage> {
 
       if (!mounted) return;
 
-      // สมัครเสร็จไปหน้า Search ของลูกค้า (default)
+      Widget nextPage;
+      if (role == 'customer') {
+        nextPage = CustomerMainPage(token: token);
+      } else if (role == 'vendor') {
+        nextPage = const VendorMainPage();
+      } else if (role == 'driver') {
+        nextPage = const DriverDashboardPage();
+      } else {
+        nextPage = SearchFormPage(token: token);
+      }
+
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(builder: (_) => const SearchFormPage()),
+        MaterialPageRoute(builder: (_) => nextPage),
       );
-    } on DioException catch (e) {
-      setState(() {
-        final data = e.response?.data;
-        if (data is Map<String, dynamic>) {
-          _error = data['message']?.toString() ??
-              data['error']?.toString() ??
-              'Sign up failed';
-        } else if (data is String) {
-          _error = data;
-        } else {
-          _error = 'Sign up failed';
-        }
-      });
     } catch (e) {
       setState(() {
-        _error = 'Unexpected error: $e';
+        if (e is Map<String, dynamic>) {
+          _error = e['message']?.toString() ??
+              e['error']?.toString() ??
+              'Sign up failed';
+        } else {
+          _error = 'Sign up failed: $e';
+        }
       });
     } finally {
       setState(() {
@@ -131,6 +139,26 @@ class _SignupPageState extends State<SignupPage> {
                   obscureText: true,
                   decoration: const InputDecoration(
                     labelText: "Confirm Password",
+                    border: OutlineInputBorder(),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                // ✅ เลือก role
+                DropdownButtonFormField<String>(
+                  value: _selectedRole,
+                  items: const [
+                    DropdownMenuItem(
+                        value: "customer", child: Text("Customer")),
+                    DropdownMenuItem(value: "vendor", child: Text("Vendor")),
+                    DropdownMenuItem(value: "driver", child: Text("Driver")),
+                  ],
+                  onChanged: (val) {
+                    setState(() {
+                      _selectedRole = val!;
+                    });
+                  },
+                  decoration: const InputDecoration(
+                    labelText: "Role",
                     border: OutlineInputBorder(),
                   ),
                 ),

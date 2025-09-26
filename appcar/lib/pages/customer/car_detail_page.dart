@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../../models/car.dart';
+import '../../config/env.dart';
 import 'booking_page.dart';
 
 class CarDetailPage extends StatelessWidget {
+  final String token;
   final Car car;
   final String location;
   final DateTime startDate;
@@ -11,6 +13,7 @@ class CarDetailPage extends StatelessWidget {
 
   const CarDetailPage({
     super.key,
+    required this.token, // ✅ ใส่ comma ตรงนี้
     required this.car,
     required this.location,
     required this.startDate,
@@ -71,8 +74,13 @@ class CarDetailPage extends StatelessWidget {
                   ),
                   const SizedBox(height: 8),
                   car.imageUrl.isNotEmpty
-                      ? Image.network(car.imageUrl,
-                          height: 160, fit: BoxFit.cover)
+                      ? Image.network(
+                          "${Env.apiBaseUrl}${car.imageUrl}", // ✅ ใช้พาธเต็มจาก backend
+                          height: 160,
+                          fit: BoxFit.cover,
+                          errorBuilder: (c, e, s) =>
+                              const Icon(Icons.directions_car, size: 120),
+                        )
                       : const Icon(Icons.directions_car, size: 120),
                   const SizedBox(height: 8),
                   Row(children: [
@@ -157,6 +165,7 @@ class CarDetailPage extends StatelessWidget {
               context,
               MaterialPageRoute(
                 builder: (_) => BookingPage(
+                  token: token, // ✅ ส่ง token ต่อไป
                   car: car,
                   startDate: startDate,
                   endDate: endDate,

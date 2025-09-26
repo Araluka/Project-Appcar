@@ -27,8 +27,8 @@ class _VendorBookingDetailPageState extends State<VendorBookingDetailPage> {
   Future<void> _fetchDetail() async {
     try {
       final token = await TokenStore.getToken();
-      final response =
-          await ApiService().getBookingDetail(widget.bookingId, token!);
+      final response = await ApiService()
+          .getVendorBookingDetail(widget.bookingId, token!); // ✅ ใช้ของ vendor
       setState(() {
         booking = response;
         _loading = false;
@@ -46,7 +46,7 @@ class _VendorBookingDetailPageState extends State<VendorBookingDetailPage> {
       final token = await TokenStore.getToken();
       await ApiService().returnBooking(widget.bookingId, token!);
 
-      // ✅ update state ทันที ไม่ต้องกดรีหน้า
+      // ✅ update state ทันที
       setState(() {
         booking!['status'] = 'completed';
       });
@@ -117,10 +117,11 @@ class _VendorBookingDetailPageState extends State<VendorBookingDetailPage> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           // ✅ ข้อมูลรถ
-                          Text("รถ: ${booking!['car_name'] ?? ''}",
-                              style: const TextStyle(
-                                  fontSize: 20, fontWeight: FontWeight.bold)),
-
+                          Text(
+                            "รถ: ${booking!['car_name']?.toString() ?? '-'}",
+                            style: const TextStyle(
+                                fontSize: 20, fontWeight: FontWeight.bold),
+                          ),
                           const SizedBox(height: 8),
 
                           // ✅ ข้อมูลลูกค้า
@@ -128,33 +129,79 @@ class _VendorBookingDetailPageState extends State<VendorBookingDetailPage> {
                           Text(
                               "เบอร์โทร: ${booking!['customer_phone'] ?? '-'}"),
 
+                          const SizedBox(height: 12),
+
+                          // ✅ ราคาและคนขับ
+                          Text(
+                            "ราคา: ฿${booking!['price_per_day']?.toString() ?? '-'} / วัน",
+                          ),
+                          Text(
+                            "คนขับ: ${(booking!['driver_required'] ?? 0) == 1 ? 'ต้องการ' : 'ไม่ต้องการ'}",
+                          ),
+
                           const SizedBox(height: 16),
 
                           // ✅ Timeline
                           _buildStep(
-                              "จองรถ",
-                              formatter.format(
-                                  DateTime.parse(booking!['created_at'])),
-                              done: true),
-                          _buildStep("กำลังใช้งาน",
-                              "${formatter.format(DateTime.parse(booking!['start_time']))} - ${formatter.format(DateTime.parse(booking!['end_time']))}",
-                              current: booking!['status'] == 'confirmed',
-                              done: booking!['status'] == 'completed'),
+                            "จองรถ",
+                            booking!['created_at'] != null
+                                ? formatter.format(DateTime.parse(
+                                    booking!['created_at'].toString()))
+                                : null,
+                            done: true,
+                          ),
                           _buildStep(
-                              "คืนรถ",
-                              formatter
-                                  .format(DateTime.parse(booking!['end_time'])),
-                              current: booking!['status'] == 'confirmed',
-                              done: booking!['status'] == 'completed'),
-                          _buildStep("รีวิว", "หลังใช้งาน",
-                              done: booking!['status'] == 'completed'),
+                            "กำลังใช้งาน",
+                            (booking!['start_time'] != null &&
+                                    booking!['end_time'] != null)
+                                ? "${formatter.format(DateTime.parse(booking!['start_time'].toString()))} - ${formatter.format(DateTime.parse(booking!['end_time'].toString()))}"
+                                : null,
+                            current: booking!['status'] == 'confirmed',
+                            done: booking!['status'] == 'completed',
+                          ),
+                          _buildStep(
+                            "คืนรถ",
+                            booking!['end_time'] != null
+                                ? formatter.format(DateTime.parse(
+                                    booking!['end_time'].toString()))
+                                : null,
+                            current: booking!['status'] == 'confirmed',
+                            done: booking!['status'] == 'completed',
+                          ),
+                          _buildStep(
+                            "รีวิว",
+                            "หลังใช้งาน",
+                            done: booking!['status'] == 'completed',
+                          ),
 
                           const SizedBox(height: 30),
 
                           // ✅ ปุ่มคืนรถ
+                          // ✅ ปุ่มคืนรถ
                           if (booking!['status'] == 'confirmed')
                             ElevatedButton(
-                              onPressed: _returnCar,
+                              onPressed: () async {
+                                try {
+                                  final token = await TokenStore.getToken();
+                                  final result = await ApiService()
+                                      .returnBooking(widget.bookingId, token!);
+
+                                  setState(() {
+                                    booking!['status'] =
+                                        result['status'] ?? 'completed';
+                                  });
+
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(
+                                        content: Text(result['message'] ??
+                                            "คืนรถเรียบร้อยแล้ว ✅")),
+                                  );
+                                } catch (e) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(content: Text("คืนรถล้มเหลว: $e")),
+                                  );
+                                }
+                              },
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: Colors.green,
                                 minimumSize: const Size.fromHeight(50),

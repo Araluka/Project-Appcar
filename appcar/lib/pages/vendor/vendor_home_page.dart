@@ -49,7 +49,7 @@ class _VendorHomePageState extends State<VendorHomePage> {
     return Scaffold(
       appBar: AppBar(
         title: const Text("ร้านของฉัน - Bookings"),
-        automaticallyImplyLeading: false,
+        automaticallyImplyLeading: false, // ✅ root page ไม่ต้องมีปุ่ม back
       ),
       body: FutureBuilder<List<Booking>>(
         future: _bookings,
@@ -74,17 +74,31 @@ class _VendorHomePageState extends State<VendorHomePage> {
                 margin: const EdgeInsets.symmetric(vertical: 8),
                 child: ListTile(
                   leading: const Icon(Icons.directions_car, size: 40),
-                  title: Text(booking.carName),
+                  title: Text(
+                    booking.carName.isNotEmpty ? booking.carName : "-",
+                  ),
                   subtitle: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                          "${formatter.format(booking.startDate)} → ${formatter.format(booking.endDate)}"),
+                        "${formatter.format(booking.startDate)} → ${formatter.format(booking.endDate)}",
+                      ),
                       Text("ลูกค้า: ${booking.customerName ?? '-'}"),
-                      Text("สถานะ: ${booking.status}",
-                          style: TextStyle(
-                              color: _statusColor(booking.status),
-                              fontWeight: FontWeight.w500)),
+                      Text(
+                        "ราคา: ฿${booking.pricePerDay.toStringAsFixed(0)}/วัน",
+                        style: const TextStyle(color: Colors.black87),
+                      ),
+                      Text(
+                        "คนขับ: ${booking.driverRequired ? 'ต้องการ' : 'ไม่ต้องการ'}",
+                        style: const TextStyle(color: Colors.black54),
+                      ),
+                      Text(
+                        "สถานะ: ${booking.status}",
+                        style: TextStyle(
+                          color: _statusColor(booking.status),
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
                     ],
                   ),
                   onTap: () {

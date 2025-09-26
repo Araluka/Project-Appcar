@@ -4,7 +4,8 @@ const connection = mysql.createConnection({
   host: 'localhost',
   user: 'root',
   password: '', // ถ้ามีรหัสผ่านให้ใส่ที่นี่
-  database: 'app_car'
+  database: 'app_car', 
+  timezone: '+07:00'
 });
 
 connection.connect((err) => {

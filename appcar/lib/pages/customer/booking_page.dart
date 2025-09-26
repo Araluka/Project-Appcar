@@ -2,16 +2,18 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../../models/car.dart';
 import '../../services/api_service.dart';
-import '../../services/token_store.dart';
+import '../../config/env.dart';
 import 'payment_page.dart';
 
 class BookingPage extends StatefulWidget {
+  final String token; // ✅ เพิ่ม token
   final Car car;
   final DateTime startDate;
   final DateTime endDate;
 
   const BookingPage({
     super.key,
+    required this.token,
     required this.car,
     required this.startDate,
     required this.endDate,
@@ -35,19 +37,17 @@ class _BookingPageState extends State<BookingPage> {
     });
 
     try {
-      final token = await TokenStore.getToken();
       final response = await ApiService().createBooking(
         carId: widget.car.id,
         startTime: widget.startDate.toIso8601String(),
         endTime: widget.endDate.toIso8601String(),
         driverRequired: _driverRequired,
-        token: token!,
+        token: widget.token, // ✅ ใช้ token ที่ส่งมาจากหน้า CarDetailPage
       );
 
       // ✅ Debug log
       print("Booking response: $response");
 
-      // ✅ รองรับทั้ง booking_id และ bookingId
       final bookingId = response['booking_id'] ?? response['bookingId'];
 
       if (bookingId != null) {
@@ -61,6 +61,7 @@ class _BookingPageState extends State<BookingPage> {
           context,
           MaterialPageRoute(
             builder: (_) => PaymentPage(
+              token: widget.token, // ✅ ส่ง token ไป PaymentPage
               bookingId: bookingId,
               car: widget.car,
               startDate: widget.startDate,
@@ -115,10 +116,12 @@ class _BookingPageState extends State<BookingPage> {
                         ? ClipRRect(
                             borderRadius: BorderRadius.circular(8),
                             child: Image.network(
-                              widget.car.imageUrl,
+                              "${Env.apiBaseUrl}${widget.car.imageUrl}",
                               width: 120,
                               height: 80,
                               fit: BoxFit.cover,
+                              errorBuilder: (c, e, s) =>
+                                  const Icon(Icons.directions_car, size: 80),
                             ),
                           )
                         : const Icon(Icons.directions_car, size: 80),

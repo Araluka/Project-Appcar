@@ -1,15 +1,18 @@
 import 'package:flutter/material.dart';
 import '../../models/car.dart';
 import '../../services/api_service.dart';
+import '../../config/env.dart';
 import 'car_detail_page.dart';
 
 class CarListPage extends StatefulWidget {
+  final String token;
   final String location;
   final DateTime startDate;
   final DateTime endDate;
 
   const CarListPage({
     super.key,
+    required this.token,
     required this.location,
     required this.startDate,
     required this.endDate,
@@ -33,6 +36,7 @@ class _CarListPageState extends State<CarListPage> {
     super.initState();
     final coords = mockLocations[widget.location]!;
     _cars = ApiService().searchCars(
+      token: widget.token, // ✅ ส่ง token ด้วย
       locationLat: coords['lat']!,
       locationLng: coords['lng']!,
       startTime: widget.startDate.toIso8601String(),
@@ -43,18 +47,14 @@ class _CarListPageState extends State<CarListPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text("Available Cars"),
-      ),
+      appBar: AppBar(title: const Text("Available Cars")),
       body: FutureBuilder<List<Car>>(
         future: _cars,
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());
           } else if (snapshot.hasError) {
-            return Center(
-              child: Text("Error: ${snapshot.error}"),
-            );
+            return Center(child: Text("Error: ${snapshot.error}"));
           } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
             return const Center(child: Text("No cars available"));
           }
@@ -76,15 +76,17 @@ class _CarListPageState extends State<CarListPage> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // รูปรถ + ชื่อ
                       Row(
                         children: [
                           car.imageUrl.isNotEmpty
                               ? Image.network(
-                                  car.imageUrl,
+                                  "${Env.apiBaseUrl}${car.imageUrl}",
                                   width: 120,
                                   height: 80,
                                   fit: BoxFit.cover,
+                                  errorBuilder: (c, e, s) => const Icon(
+                                      Icons.directions_car,
+                                      size: 60),
                                 )
                               : const Icon(Icons.directions_car, size: 60),
                           const SizedBox(width: 12),
@@ -100,8 +102,6 @@ class _CarListPageState extends State<CarListPage> {
                         ],
                       ),
                       const SizedBox(height: 8),
-
-                      // รายละเอียด
                       Row(
                         children: [
                           const Icon(Icons.event_seat, size: 18),
@@ -113,58 +113,39 @@ class _CarListPageState extends State<CarListPage> {
                           Text(car.transmission),
                         ],
                       ),
-                      const SizedBox(height: 4),
+                      const SizedBox(height: 8),
                       Row(
                         children: [
                           const Icon(Icons.work, size: 18),
                           const SizedBox(width: 4),
-                          Text("${car.bagSmall} Small bag"),
+                          Text("${car.bagSmall} small bags"),
                           const SizedBox(width: 12),
-                          Text("${car.bagLarge} Large bags"),
+                          Text("${car.bagLarge} large bags"),
                         ],
                       ),
                       const SizedBox(height: 8),
-
-                      // ราคา + ปุ่ม
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                "Price for ${widget.endDate.difference(widget.startDate).inDays} days:",
-                                style: TextStyle(color: Colors.grey[600]),
-                              ),
-                              Text(
-                                "THB ${car.pricePerDay.toStringAsFixed(0)}",
-                                style: const TextStyle(
-                                  color: Colors.green,
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                              const Text(
-                                "Free cancellation",
-                                style: TextStyle(
-                                  color: Colors.green,
-                                  fontSize: 13,
-                                ),
-                              ),
-                            ],
+                          Text(
+                            "฿${car.pricePerDay.toStringAsFixed(0)}/day",
+                            style: const TextStyle(
+                              color: Colors.green,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 16,
+                            ),
                           ),
                           ElevatedButton(
                             style: ElevatedButton.styleFrom(
                               backgroundColor: Colors.black,
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(8),
-                              ),
+                              foregroundColor: Colors.white,
                             ),
                             onPressed: () {
                               Navigator.push(
                                 context,
                                 MaterialPageRoute(
                                   builder: (_) => CarDetailPage(
+                                    token: widget.token, // ✅ ส่ง token ต่อ
                                     car: car,
                                     location: widget.location,
                                     startDate: widget.startDate,
@@ -173,10 +154,10 @@ class _CarListPageState extends State<CarListPage> {
                                 ),
                               );
                             },
-                            child: const Text("view detail"),
+                            child: const Text("View detail"),
                           ),
                         ],
-                      )
+                      ),
                     ],
                   ),
                 ),

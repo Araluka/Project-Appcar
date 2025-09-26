@@ -2,10 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../../models/car.dart';
 import '../../services/api_service.dart';
-import '../../services/token_store.dart';
 import 'payment_success_page.dart';
 
 class PaymentPage extends StatefulWidget {
+  final String token; // ✅ รับ token จาก BookingPage
   final int bookingId;
   final Car car;
   final DateTime startDate;
@@ -14,6 +14,7 @@ class PaymentPage extends StatefulWidget {
 
   const PaymentPage({
     super.key,
+    required this.token,
     required this.bookingId,
     required this.car,
     required this.startDate,
@@ -37,19 +38,22 @@ class _PaymentPageState extends State<PaymentPage> {
     });
 
     try {
-      final token = await TokenStore.getToken();
       final response = await ApiService().createPayment(
         bookingId: widget.bookingId,
         amount: widget.totalCost,
         method: _selectedMethod,
-        token: token!,
+        token: widget.token, // ✅ ใช้ token ที่ส่งมาจาก BookingPage
       );
+
+      // ✅ Debug log
+      print("Payment response: $response");
 
       if (!mounted) return;
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(
           builder: (_) => PaymentSuccessPage(
+            token: widget.token, // ✅ ส่ง token ต่อไป
             bookingId: widget.bookingId,
             car: widget.car,
             startDate: widget.startDate,

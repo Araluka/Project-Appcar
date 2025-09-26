@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:dio/dio.dart';
 import '../../services/api_service.dart';
-import '../../services/token_store.dart';
 
 class NotificationsPage extends StatefulWidget {
-  const NotificationsPage({super.key});
+  final String token; // ✅ รับ token
+  const NotificationsPage({super.key, required this.token});
 
   @override
   State<NotificationsPage> createState() => _NotificationsPageState();
@@ -23,8 +23,8 @@ class _NotificationsPageState extends State<NotificationsPage> {
 
   Future<void> _fetchNotifications() async {
     try {
-      final token = await TokenStore.getToken();
-      final data = await ApiService().getMyNotifications(token!);
+      final data =
+          await ApiService().getMyNotifications(widget.token); // ✅ ใช้ token
       setState(() {
         _notifications = data;
       });
@@ -47,18 +47,20 @@ class _NotificationsPageState extends State<NotificationsPage> {
           ? const Center(child: CircularProgressIndicator())
           : _error != null
               ? Center(child: Text(_error!))
-              : ListView.separated(
-                  itemCount: _notifications.length,
-                  separatorBuilder: (_, __) => const Divider(),
-                  itemBuilder: (context, index) {
-                    final n = _notifications[index];
-                    return ListTile(
-                      leading: const Icon(Icons.notifications),
-                      title: Text(n["title"] ?? ""),
-                      subtitle: Text(n["message"] ?? ""),
-                    );
-                  },
-                ),
+              : _notifications.isEmpty
+                  ? const Center(child: Text("ไม่มีการแจ้งเตือน"))
+                  : ListView.separated(
+                      itemCount: _notifications.length,
+                      separatorBuilder: (_, __) => const Divider(),
+                      itemBuilder: (context, index) {
+                        final n = _notifications[index];
+                        return ListTile(
+                          leading: const Icon(Icons.notifications),
+                          title: Text(n["title"] ?? ""),
+                          subtitle: Text(n["message"] ?? ""),
+                        );
+                      },
+                    ),
     );
   }
 }
